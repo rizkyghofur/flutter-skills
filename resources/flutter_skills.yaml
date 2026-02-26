@@ -9,29 +9,33 @@
 - name: flutter-environment-setup-macos
   description: Set up a macOS environment for Flutter development
   instructions: |
-    To set up a macOS environment for Flutter development, you need to configure your development
-    environment to run, build, and deploy Flutter applications for macOS devices. This involves
-    setting up tooling, validating your setup, and then you can start developing for macOS.
+    To set up a macOS environment for Flutter development, you need to configure
+    your development environment to run, build, and deploy Flutter applications
+    for macOS devices. This involves setting up tooling, validating your setup,
+    and then you can start developing for macOS.
 
-    First, ensure Flutter is installed and up to date. If you haven't installed Flutter yet, you
-    should follow the "Get started with Flutter" guide.
+    First, ensure Flutter is installed and up to date. If you haven't installed
+    Flutter yet, you should follow the "Get started with Flutter" guide.
 
-    For tooling, you will need Xcode. Xcode allows you to run Flutter apps on macOS and compile and
-    debug native Swift and Objective-C code. Install the latest version of Xcode, or update it if
-    you already have it.
+    For tooling, you will need Xcode. Xcode allows you to run Flutter apps on
+    macOS and compile and debug native Swift and Objective-C code. Install the
+    latest version of Xcode, or update it if you already have it.
 
-    After setting up the tooling, validate your setup by running the `flutter doctor` command in
-    your terminal. This command checks for any issues with your macOS development setup. If there
-    are errors or tasks under the Xcode section, resolve them and run `flutter doctor -v` again to
-    verify the changes. You should also run `flutter devices` to ensure Flutter can find and connect
-    to your macOS device. If everything is set up correctly, you should see at least one entry with
-    "macos" as the platform. If you encounter any setup issues, you can refer to the "Install and
-    setup troubleshooting" guide or reach out to the Flutter community channels.
+    After setting up the tooling, validate your setup by running the `flutter
+    doctor` command in your terminal. This command checks for any issues with
+    your macOS development setup. If there are errors or tasks under the Xcode
+    section, resolve them and run `flutter doctor -v` again to verify the
+    changes. You should also run `flutter devices` to ensure Flutter can find
+    and connect to your macOS device. If everything is set up correctly, you
+    should see at least one entry with "macos" as the platform. If you encounter
+    any setup issues, you can refer to the "Install and setup troubleshooting"
+    guide or reach out to the Flutter community channels.
 
-    Once your macOS desktop development for Flutter is set up, you can continue your Flutter
-    learning journey, test on macOS, or begin expanding integration with macOS. You can also build
-    and deploy to macOS, bind to native macOS code, embed native macOS views, set up app flavors,
-    and use Swift Package Manager. Flutter supports building macOS apps. You can also host a native
+    Once your macOS desktop development for Flutter is set up, you can continue
+    your Flutter learning journey, test on macOS, or begin expanding integration
+    with macOS. You can also build and deploy to macOS, bind to native macOS
+    code, embed native macOS views, set up app flavors, and use Swift Package
+    Manager. Flutter supports building macOS apps. You can also host a native
     macOS view and bind to native code.
   resources:
     - https://docs.flutter.dev/platform-integration/macos/setup
@@ -45,121 +49,172 @@
 - name: flutter-environment-setup-windows
   description: Set up a Windows environment for Flutter development
   instructions: |
-    To set up Flutter on Windows, you need to add the Flutter SDK's `bin` directory to your system's
-    PATH environment variable. This allows you to use `flutter` and `dart` command-line tools in
-    terminals and IDEs.
+    To set up a Windows environment for app development, particularly with
+    Flutter, several steps are involved.
     
-    Here's a general process for adding Flutter to your PATH on Windows:
-    1.  **Determine your Flutter SDK installation location**. Copy the absolute path to the
-    directory where you downloaded and extracted the Flutter SDK.
-    2.  **Navigate to the environment variables settings**. You can do this by pressing `Windows +
-    Pause` (if your keyboard lacks a Pause key, try `Windows + Fn + B`). This opens the System >
-    About dialog.
-    3.  Click `Advanced System Settings` > `Advanced` > `Environment Variables...`. The Environment
-    Variables dialog will open.
-    4.  **Add the Flutter SDK `bin` to your path**.
-        *   In the "User variables for (username)" section, look for the `Path` entry.
-        *   If `Path` exists, double-click it. The Edit Environment Variable dialog should open.
-        *   Double-click inside an empty row.
-        *   Type the path to the `bin` directory of your Flutter installation. For example, if
-            Flutter is in `develop\flutter` within your user directory, you'd type
-            `%USERPROFILE%\develop\flutter\bin`.
-        *   Click the Flutter entry you added to select it.
-        *   Click `Move Up` until the Flutter entry is at the top of the list.
-        *   If the `Path` entry doesn't exist, click `New...`. In the Variable Name box, type
-            `Path`, and in the Variable Value box, type the path to the `bin` directory of your
-            Flutter installation (e.g., `%USERPROFILE%\develop\flutter\bin`).
-        *   To confirm your changes, click `OK` three times.
-    5.  **Apply your changes**. Close and reopen all open command prompts, terminal sessions, and
-    IDEs to get access to the `flutter` tool.
-    6.  **Validate your setup**. Open a command prompt or terminal and run `flutter --version` and
-    `dart --version`. If either command isn't found, refer to Flutter installation troubleshooting.
+    First, you need to install Flutter itself. If you haven't downloaded
+    Flutter, you should follow the "Get started with Flutter" guide. If Flutter
+    is already installed, ensure it's up to date. After downloading the Flutter
+    SDK, you must add its `bin` directory to your system's PATH environment
+    variable to use `flutter` and `dart` command-line tools in terminals and
+    IDEs. On Windows, this involves copying the absolute path to the Flutter
+    SDK's directory and navigating to the environment variables settings.
     
-    **Troubleshooting Common Issues:**
-    *   **Flutter installed in a directory requiring elevated privileges:** If Flutter is installed
-        in a directory like `C:\Program Files\`, which requires elevated privileges, relocate it to
-        a different folder, such as `C:\src\flutter`.
-    *   **`Invoke-Expression : You cannot call a method on a null-valued expression` error:** This
-        error often occurs when the `SystemRoot` environment variable is missing or PowerShell's
-        execution policy prevents scripts from running.
-        *   Run PowerShell as an Administrator.
-        *   Ensure the `SystemRoot` environment variable is set (usually to `C:\Windows`) by running
-            `echo $env:SystemRoot` in PowerShell.
-        *   If the issue persists, adjust the execution policy by running `Set-ExecutionPolicy
-            -ExecutionPolicy RemoteSigned -Scope CurrentUser` in an Administrator PowerShell window.
-    *   **`'flutter' is not recognized as an internal or external command`:** This indicates that
-        Flutter was not added to the PATH environment variable. Follow the instructions for adding a
-        command to your path.
-    *   **Flutter SDK in a protected folder:** If you see an error stating "The Flutter SDK is
-        installed in a protected folder and may not function correctly," move the SDK to a
-        user-writable location without administrative permissions and restart.
+    Next, you'll need to set up tooling. For Windows development with Flutter,
+    Visual Studio is required. Visual Studio allows you to run Flutter apps on
+    Windows and compile and debug native C and C++ code. It's important to note
+    that Visual Studio is a separate IDE from Visual Studio Code and is only
+    supported on Windows. If you haven't installed Visual Studio, follow
+    Microsoft's guide; otherwise, update it to the latest version.
+    
+    You can also set up Flutter support in various IDEs and editors, such as VS
+    Code, Android Studio, IntelliJ, and Firebase Studio.
+    
+    After installing Flutter and setting up tooling, you need to set up
+    development for at least one target platform. While web development is
+    recommended first as it requires no additional setup beyond a browser, you
+    can set up development for other platforms later. For Windows desktop
+    development, you specifically configure your environment to run, build, and
+    deploy Flutter apps for the Windows desktop platform.
+    
+    If you are developing for Android on Windows, you'll need to configure your
+    development environment to run, build, and deploy Flutter apps for Android
+    devices. This includes setting up Android tooling and an Android device. For
+    physical Android devices, you need to enable Developer options and USB
+    debugging, and install the necessary USB driver for your device. You can
+    also enable wireless debugging. For emulated performance, you should enable
+    hardware acceleration by selecting an option that mentions "Hardware" in the
+    Graphics acceleration dropdown menu under "Emulated Performance" in
+    Additional settings. After configuring, you can verify your virtual device
+    and run the emulator.
+    
+    To build a zip file for Windows, you'll find the Flutter executable (`.exe`)
+    in your project under `build\windows\runner\<build mode>\`. In addition to
+    the executable, you'll need all the `.dll` files from the same directory and
+    the `data` directory. The Visual C++ redistributables are also necessary,
+    and you can use methods from Microsoft's deployment example walkthroughs to
+    ensure end-users have them.
+    
+    For certain functionalities, like generating certificates, you might need
+    OpenSSL. You can set an environment variable for OpenSSL and then use
+    commands to generate a private key, a certificate signing request (CSR)
+    file, a signed certificate (CRT) file, and a `.pfx` file. The `.pfx`
+    certificate needs to be installed on the local machine in the Certificate
+    store as "Trusted Root Certification Authorities" before installing the app.
+    
+    After enabling desktop support, you should restart your IDE so it can detect
+    the new device. When creating a new project with desktop support, it will
+    automatically create iOS, Android, web, and desktop versions of your app. If
+    `flutter doctor` finds problems for platforms you don't intend to develop
+    for, you can ignore the warnings or disable the platform using `flutter
+    config` commands, such as `--no-enable-windows-desktop`.
   resources:
     - https://docs.flutter.dev/install
     - https://docs.flutter.dev/install/add-to-path
     - https://docs.flutter.dev/install/manual
+    - https://docs.flutter.dev/install/custom
     - https://docs.flutter.dev/install/troubleshoot
     - https://docs.flutter.dev/platform-integration/windows/building
     - https://docs.flutter.dev/platform-integration/windows/setup
     - https://docs.flutter.dev/tools/vs-code
-    
-- name: flutter-architecture
-  description: Configure Flutter SDK on the user's machine, setup IDEs, and diagnose CLI errors.
+
+- name: flutter-environment-setup-linux
+  description: Set up a Linux environment for Flutter development
   instructions: |
-    Architecture is a broad term that can refer to many topics depending on the context. In the
-    context of Flutter, architecture refers to how to structure, organize, and design your Flutter
-    app to scale as project requirements and teams grow. It is an important part of building a
-    maintainable, resilient, and scalable Flutter app. This guide covers app architecture principles
-    and best practices for building Flutter apps.
+    Setting up a Linux environment for app development involves configuring your
+    system to run, build, and deploy applications. This often includes
+    installing necessary tools and prerequisites.
 
-    Good app architecture provides several benefits to engineering teams and end users. It makes it
-    easier to modify, update, and fix issues over time (maintainability). A well-thought-out
-    application allows more people to contribute to the same codebase concurrently with minimal code
-    conflicts (scalability).
+    For Flutter app development on Linux, you need to configure your development
+    environment to build Flutter apps for the Linux desktop. If you haven't
+    already, you should first set up Flutter by following the "Get started with
+    Flutter" guide, and ensure it's up to date. To run and debug desktop Flutter
+    apps on Linux, you'll need to download and install prerequisite packages.
+    These prerequisites can include `curl`, `git`, `unzip`, `xz-utils`, `zip`,
+    and `libglu1-mesa`. On Debian-based distributions like Ubuntu, these
+    packages can be installed using `sudo apt-get update -y && sudo apt-get
+    upgrade -y` followed by `sudo apt-get install -y curl git unzip xz-utils zip
+    libglu1-mesa`. For the best experience, consider installing an editor or IDE
+    with Flutter support. If you are developing on a Chromebook, you need to
+    turn on Linux support and ensure it's up to date.
+  resources:
+    - https://docs.flutter.dev/platform-integration/linux/setup
+    - https://docs.flutter.dev/platform-integration/android/setup
+    - https://docs.flutter.dev/install
+    - https://docs.flutter.dev/deployment/linux
+    - https://docs.flutter.dev/platform-integration/linux
+    - https://docs.flutter.dev/install/manual
+    - https://docs.flutter.dev/install/custom
+    - https://docs.flutter.dev/platform-integration/linux/building
+    - https://docs.flutter.dev/learn/pathway/quick-install
 
-    Common architectural principles include separation of concerns, layered architecture, single
-    source of truth, unidirectional data flow, UI as a function of (immutable) state, extensibility,
-    and testability.
+- name: flutter-architecture
+  description: Use the Flutter team's recommended app architecture
+  instructions: |
+    Architecture is a broad term that can refer to many topics depending on the
+    context. In the context of Flutter, architecture refers to how to structure,
+    organize, and design your Flutter app to scale as project requirements and
+    teams grow. It is an important part of building a maintainable, resilient,
+    and scalable Flutter app. This guide covers app architecture principles and
+    best practices for building Flutter apps.
 
-    Flutter applications should be written in layers. Layered architecture is a software design
-    pattern that organizes an application into distinct layers, each with specific roles and
-    responsibilities. Typically, applications are separated into 2 to 3 layers, depending on
-    complexity. The three common layers of app architecture are the UI layer, logic layer, and data
-    layer.
+    Good app architecture provides several benefits to engineering teams and end
+    users. It makes it easier to modify, update, and fix issues over time
+    (maintainability). A well-thought-out application allows more people to
+    contribute to the same codebase concurrently with minimal code conflicts
+    (scalability).
 
-    *   **UI layer** (also known as the 'presentation layer') displays data to the user that is
-        exposed by the business logic layer and handles user interaction. In Flutter, this applies
-        to widgets, which are the basic building blocks of a Flutter user interface. You should
+    Common architectural principles include separation of concerns, layered
+    architecture, single source of truth, unidirectional data flow, UI as a
+    function of (immutable) state, extensibility, and testability.
+
+    Flutter applications should be written in layers. Layered architecture is a
+    software design pattern that organizes an application into distinct layers,
+    each with specific roles and responsibilities. Typically, applications are
+    separated into 2 to 3 layers, depending on complexity. The three common
+    layers of app architecture are the UI layer, logic layer, and data layer.
+
+    *   **UI layer** (also known as the 'presentation layer') displays data to
+        the user that is exposed by the business logic layer and handles user
+        interaction. In Flutter, this applies to widgets, which are the basic
+        building blocks of a Flutter user interface. You should
         write reusable, lean widgets that hold as little logic as possible.
-    *   **Logic layer** (commonly known as the 'domain layer') implements core business logic and
-        facilitates interaction between the data layer and UI layer. This layer is optional and only
-        needs to be implemented if your application has complex business logic that happens on the
-        client. Many apps are only concerned with presenting data to a user and allowing the user to
-        change that data (colloquially known as CRUD apps).
-    *   **Data layer** (known as the model in MVVM terminology) is the source of truth for all
-        application data. It handles business data and logic. As the source of truth, it's the only
-        place that application data should be updated. It is responsible for consuming data from
-        various external APIs, exposing that data to the UI, handling events from the UI that
-        require data to be updated, and sending update requests to those external APIs as needed.
-        The data layer typically has two main components: repositories and services.
-        *   **Repositories** are the source of truth for your model data. They contain logic related
-            to that data, such as updating data in response to user events or polling for data from
-            services. Repositories are responsible for synchronizing data when offline capabilities
-            are supported, managing retry logic, and caching data. They transform raw data into
-            domain models, which represent the data the application needs, formatted for consumption
-            by view model classes.
-        *   **Services** are stateless Dart classes that interact with APIs, such as HTTP servers
-            and platform plugins. Their only job is to wrap an external API. Any data your
-            application needs that isn't created inside the application code itself should be
-            fetched from within service classes. There is generally one service class per data
+    *   **Logic layer** (commonly known as the 'domain layer') implements core
+        business logic and facilitates interaction between the data layer and UI
+        layer. This layer is optional and only needs to be implemented if your
+        application has complex business logic that happens on the client. Many
+        apps are only concerned with presenting data to a user and allowing the
+        user to change that data (colloquially known as CRUD apps).
+    *   **Data layer** (known as the model in MVVM terminology) is the source of
+        truth for all application data. It handles business data and logic. As
+        the source of truth, it's the only place that application data should be
+        updated. It is responsible for consuming data from various external
+        APIs, exposing that data to the UI, handling events from the UI that
+        require data to be updated, and sending update requests to those
+        external APIs as needed. The data layer typically has two main
+        components: repositories and services.
+        *   **Repositories** are the source of truth for your model data. They
+            contain logic related to that data, such as updating data in
+            response to user events or polling for data from services.
+            Repositories are responsible for synchronizing data when offline
+            capabilities are supported, managing retry logic, and caching data.
+            They transform raw data into domain models, which represent the data
+            the application needs, formatted for consumption by view model
+            classes.
+        *   **Services** are stateless Dart classes that interact with APIs,
+            such as HTTP servers and platform plugins. Their only job is to wrap
+            an external API. Any data your application needs that isn't created
+            inside the application code itself should be fetched from within
+            service classes. There is generally one service class per data
             source.
 
-    Within each layer, you should further separate your application by feature or functionality. For
-    example, your application's authentication logic should be in a different class than the search
-    logic.
+    Within each layer, you should further separate your application by feature
+    or functionality. For example, your application's authentication logic
+    should be in a different class than the search logic.
 
-    The Flutter team's recommended app architecture includes common architectural principles, MVVM
-    and state management, dependency injection, and common design patterns for writing robust
-    Flutter applications.
+    The Flutter team's recommended app architecture includes common
+    architectural principles, MVVM and state management, dependency injection,
+    and common design patterns for writing robust Flutter applications.
     
   resources:
     - https://docs.flutter.dev/app-architecture

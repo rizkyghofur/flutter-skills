@@ -6,74 +6,96 @@ metadata:
     - "https://docs.flutter.dev/install"
     - "https://docs.flutter.dev/install/add-to-path"
     - "https://docs.flutter.dev/install/manual"
+    - "https://docs.flutter.dev/install/custom"
     - "https://docs.flutter.dev/install/troubleshoot"
     - "https://docs.flutter.dev/platform-integration/windows/building"
     - "https://docs.flutter.dev/platform-integration/windows/setup"
     - "https://docs.flutter.dev/tools/vs-code"
   model: "models/gemini-3.1-pro-preview"
-  last_modified: "Thu, 26 Feb 2026 23:17:09 GMT"
+  last_modified: "Thu, 26 Feb 2026 23:41:21 GMT"
 
 ---
-# Flutter Windows Setup and Troubleshooting
-
 ## Goal
-Configures a Windows environment to support Flutter development by injecting the Flutter SDK `bin` directory into the user's `PATH` environment variable. Validates the configuration using CLI tools and automatically resolves common execution policy, path resolution, and permission errors associated with the Windows Flutter toolchain.
+Configures a Windows development environment for building Flutter applications targeting Windows Desktop and Android. Analyzes system requirements, modifies environment variables, installs necessary C++ toolchains, manages platform-specific configurations, and generates self-signed certificates for local Windows application deployment. Assumes the host machine is running Windows 10 or 11 with administrative privileges available for system modifications.
 
 ## Instructions
 
-1. **Determine SDK Location**
-   **STOP AND ASK THE USER:** "Please provide the absolute path to the directory where you extracted the Flutter SDK (e.g., `C:\src\flutter` or `%USERPROFILE%\develop\flutter`)."
-
-2. **Validate Target Directory**
-   Evaluate the user-provided path. If the path targets a protected system directory requiring elevated privileges (e.g., `C:\Program Files\`), instruct the user to relocate the SDK to a user-writable directory before proceeding.
-
-3. **Inject Flutter into User PATH**
-   Execute the following PowerShell script to append the Flutter `bin` directory to the User `Path` environment variable safely. Replace `<USER_PROVIDED_PATH>` with the validated path from Step 1.
-
+1. **Configure Flutter SDK and Environment Variables**
+   Extract the Flutter SDK to a secure, user-writable directory (e.g., `C:\develop\flutter`). Do not place it in `C:\Program Files\`.
+   Execute the following PowerShell command to append the Flutter `bin` directory to the user's `PATH`:
    ```powershell
-   $flutterBin = "<USER_PROVIDED_PATH>\bin"
-   $oldPath = [Environment]::GetEnvironmentVariable("Path", "User")
-
-   if ($oldPath -notmatch [regex]::Escape($flutterBin)) {
-       $newPath = $oldPath + ";" + $flutterBin
-       [Environment]::SetEnvironmentVariable("Path", $newPath, "User")
-       Write-Host "Successfully added $flutterBin to User PATH."
-   } else {
-       Write-Host "Flutter bin is already present in User PATH."
+   $flutterBinPath = "C:\develop\flutter\bin"
+   $currentUserPath = [Environment]::GetEnvironmentVariable("Path", [EnvironmentVariableTarget]::User)
+   if ($currentUserPath -notmatch [regex]::Escape($flutterBinPath)) {
+       [Environment]::SetEnvironmentVariable("Path", "$currentUserPath;$flutterBinPath", [EnvironmentVariableTarget]::User)
    }
    ```
 
-4. **Apply Environment Changes**
-   Instruct the user to close and reopen all active command prompts, PowerShell sessions, and IDEs to inherit the updated `PATH` variables.
-
-5. **Validate Setup**
-   Execute the following commands in a new terminal session to verify the toolchain:
-   ```powershell
-   flutter --version
-   dart --version
+2. **Install Windows Tooling**
+   To compile Windows desktop applications, Visual Studio (not VS Code) is strictly required. Install Visual Studio with the "Desktop development with C++" workload.
+   If automating via command line, use the following workload ID:
+   ```cmd
+   vs_setup.exe --add Microsoft.VisualStudio.Workload.NativeDesktop --includeRecommended
    ```
 
-6. **Decision Logic: Troubleshooting Validation Failures**
-   If Step 5 fails, apply the following decision tree based on the specific error output:
+3. **Decision Logic: Target Platform Configuration**
+   **STOP AND ASK THE USER:** "Which target platforms are you configuring for this environment? (A) Windows Desktop, (B) Android, or (C) Both?"
+   *   **If (A) Windows Desktop:** Proceed to Step 5. Disable Android and Web if unnecessary:
+       ```cmd
+       flutter config --no-enable-android
+       flutter config --no-enable-web
+       flutter config --enable-windows-desktop
+       ```
+   *   **If (B) Android:** Proceed to Step 4. Disable Windows desktop if unnecessary:
+       ```cmd
+       flutter config --no-enable-windows-desktop
+       ```
+   *   **If (C) Both:** Execute Steps 4 and 5. Ensure both platforms are enabled.
 
-   *   **Condition A:** Output contains `'flutter' is not recognized as an internal or external command`.
-       *   *Action:* The `PATH` variable did not update correctly or the terminal session was not restarted. Re-run Step 3 and explicitly verify the registry value.
-   *   **Condition B:** Output contains `Invoke-Expression : You cannot call a method on a null-valued expression`.
-       *   *Action:* The `SystemRoot` variable is missing or PowerShell execution policies are blocking the script. Execute the following remediation script as Administrator:
-           ```powershell
-           # Verify and set SystemRoot
-           if (-not $env:SystemRoot) {
-               [Environment]::SetEnvironmentVariable("SystemRoot", "C:\Windows", "Machine")
-               $env:SystemRoot = "C:\Windows"
-           }
-           # Adjust Execution Policy for the current user
-           Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser -Force
-           ```
-   *   **Condition C:** Output contains `The Flutter SDK is installed in a protected folder and may not function correctly`.
-       *   *Action:* The SDK is in an elevated directory. **STOP AND ASK THE USER:** "The Flutter SDK is in a protected folder. Please move it to a user-writable location like `C:\src\flutter`, then provide the new path."
+4. **Configure Android Tooling on Windows**
+   *   Install Android Studio and the Android SDK Command-line Tools via the SDK Manager.
+   *   For physical devices: Enable "Developer options" and "USB debugging" on the device. Install the OEM USB drivers for Windows.
+   *   For emulators: Enable hardware acceleration in the AVD Manager by selecting a "Hardware" graphics acceleration option under "Emulated Performance".
+
+5. **Build and Package Windows Desktop Applications**
+   To compile the Windows application, execute:
+   ```cmd
+   flutter build windows
+   ```
+   To package the application manually, gather the following files from `build\windows\runner\Release\`:
+   *   The executable (`<project_name>.exe`)
+   *   All `.dll` files (e.g., `flutter_windows.dll`)
+   *   The `data` directory
+   *   Visual C++ redistributables (`msvcp140.dll`, `vcruntime140.dll`, `vcruntime140_1.dll`) placed adjacent to the `.exe`.
+
+   *Optional:* To rename the generated executable, modify the `BINARY_NAME` in `windows/CMakeLists.txt`:
+   ```cmake
+   # Change this to change the on-disk name of your application.
+   set(BINARY_NAME "CustomAppName")
+   ```
+
+6. **Generate Self-Signed Certificates for MSIX Packaging (OpenSSL)**
+   If the user requires local testing of an MSIX package, generate a `.pfx` certificate. Ensure OpenSSL is in the `PATH`, then execute:
+   ```cmd
+   openssl genrsa -out mykeyname.key 2048
+   openssl req -new -key mykeyname.key -out mycsrname.csr
+   openssl x509 -in mycsrname.csr -out mycrtname.crt -req -signkey mykeyname.key -days 10000
+   openssl pkcs12 -export -out CERTIFICATE.pfx -inkey mykeyname.key -in mycrtname.crt
+   ```
+   Instruct the user to install `CERTIFICATE.pfx` into the local machine's Certificate Store under "Trusted Root Certification Authorities".
+
+7. **Validate-and-Fix Feedback Loop**
+   Execute the Flutter diagnostic tool to verify the environment:
+   ```cmd
+   flutter doctor -v
+   ```
+   *   *Condition:* If `cmdline-tools component is missing` is reported, instruct the user to open Android Studio -> Tools -> SDK Manager -> SDK Tools, and check "Android SDK Command-line Tools".
+   *   *Condition:* If Visual Studio toolchain issues are reported, verify the `Microsoft.VisualStudio.Workload.NativeDesktop` workload is fully installed.
+   *   *Condition:* If `flutter` is not recognized, verify the PowerShell `PATH` injection succeeded and restart the terminal process.
 
 ## Constraints
-*   Do not modify the Machine/System `PATH` variable; strictly target the `User` scope to avoid requiring persistent elevated privileges.
-*   Do not proceed with `PATH` injection if the user provides a path containing `C:\Program Files\` or `C:\Windows\`.
-*   Always enforce a terminal restart (or environment refresh) between modifying the `PATH` and validating the `flutter` command.
-*   Assume the user is operating on a standard Windows 10/11 environment using PowerShell as the primary shell interface.
+*   Do not include external URLs or hyperlinks in any output.
+*   Do not recommend placing the Flutter SDK in directories requiring elevated privileges (e.g., `C:\Program Files\`).
+*   Do not confuse Visual Studio Code with Visual Studio; the latter is strictly required for the C++ toolchain on Windows.
+*   Always assume the user is operating within a standard Windows command prompt or PowerShell environment unless otherwise specified.
+*   Never skip the `flutter doctor` validation step; it is mandatory for confirming environment integrity.
