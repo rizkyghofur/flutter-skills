@@ -20,7 +20,7 @@ defaults:
     working-directory: tool
 
 jobs:
-  analyze:
+  analyze_and_test:
     strategy:
       fail-fast: false
       matrix:
@@ -36,9 +36,7 @@ jobs:
       
       - run: dart analyze --fatal-infos
 
-      # NOTE: dart test is currently omitted as the test suite needs to be 
-      # refactored to work properly without relying on real API keys in the CI environment
-      # - run: dart test
+      - run: dart test
 
   formatting_stable_ubuntu-latest:
     runs-on: ubuntu-latest
