@@ -634,3 +634,89 @@
     - https://docs.flutter.dev/ui/adaptive-responsive/input
     - https://docs.flutter.dev/ui/accessibility/web-accessibility
     - https://docs.flutter.dev/resources/glossary
+- name: flutter-state-management
+  description: Manage state in your Flutter application
+  instructions: |
+    State management in Flutter refers to how an app organizes its objects to
+    effectively access them and share them between different widgets. State is
+    information that can be read synchronously when a widget is built or
+    information that might change during the lifetime of a widget. Flutter's UI
+    is built to reflect the current state of the app, meaning that when state
+    changes, the app should trigger a rebuild of the UI that depends on that
+    state. This concept is often described as "UI is a function of state".
+
+    There are various approaches to state management in Flutter. A fundamental
+    concept is the distinction between `StatelessWidget` and `StatefulWidget`. A
+    `StatelessWidget` does not require a state change and has no internal state
+    to manage. Examples include `AboutDialog`, `CircleAvatar`, and `Text`. Its
+    `build` method is typically called when the widget is inserted into a tree,
+    when its parent changes its configuration, or when an `InheritedWidget` it
+    depends on changes. In contrast, a `StatefulWidget` is a widget that changes
+    state. If a widget's unique characteristics need to change based on user
+    interaction or other factors, it is stateful. `StatefulWidget`s store
+    mutable state in a separate class that subclasses `State`. To signal to the
+    framework that its internal state has changed, `setState()` must be called.
+    Calling `setState()` marks the widget as dirty and schedules it to be
+    rebuilt. If `setState()` is not called when modifying the internal state,
+    the UI might not update.
+    
+    For sharing state between widgets, common patterns include using widget
+    constructors (also known as "prop drilling"), `InheritedWidget` (or similar
+    APIs like the `provider` package), and callbacks to notify a parent widget
+    of changes. `InheritedWidget` is a low-level approach used for communication
+    between ancestors and children in the widget tree. It includes an
+    `updateShouldNotify()` method that Flutter calls to determine if a state
+    change should trigger a rebuild of child widgets. Flutter itself extensively
+    uses `InheritedWidget` for shared state, such as the application's visual
+    theme. The `provider` package is a utility package that provides a wrapper
+    around `InheritedWidget`.
+    
+    As applications grow, more advanced state management approaches become
+    attractive. Community-provided packages can help reduce boilerplate code,
+    provide debugging tools, and enable a clearer application architecture. The
+    best choice of package depends on the app's complexity, team preferences,
+    and specific problems.
+    
+    The Model-View-ViewModel (MVVM) design pattern is often used with reactive
+    frameworks like Flutter. In MVVM, the `ViewModel` manages the UI state and
+    the `View` displays that state. `ViewModels` contain the logic to convert
+    app data into UI State, as data from repositories might be formatted
+    differently from what needs to be displayed. `ViewModels` use Flutter's
+    `ChangeNotifier` class to notify the UI when data changes. Extending
+    `ChangeNotifier` provides access to the `notifyListeners()` method, which
+    triggers UI rebuilds when called. The `Model` in MVVM is typically a Dart
+    class that handles low-level tasks like HTTP requests, data caching, or
+    managing system resources.
+    
+    Flutter's architectural overview also highlights the concept of
+    unidirectional data flow (UDF). In UDF, state flows from the data layer
+    through the logic layer to the UI layer, while events from user interaction
+    flow in the opposite direction. The UI layer handles user events, which
+    invoke methods in the logic layer. The logic layer then calls methods in the
+    data layer (repositories) to mutate data. The data layer updates the data
+    and provides it back to the logic layer, which then sends its new state to
+    the UI for display. The key idea is that data changes always happen in the
+    Single Source of Truth (SSOT), which is the data layer. This makes code
+    easier to understand and less error-prone.
+
+  resources:
+    - https://docs.flutter.dev/app-architecture/concepts
+    - https://docs.flutter.dev/app-architecture/design-patterns
+    - https://docs.flutter.dev/app-architecture/design-patterns/optimistic-state
+    - https://docs.flutter.dev/app-architecture/guide
+    - https://docs.flutter.dev/app-architecture/recommendations
+    - https://docs.flutter.dev/data-and-backend/state-mgmt
+    - https://docs.flutter.dev/data-and-backend/state-mgmt/declarative
+    - https://docs.flutter.dev/data-and-backend/state-mgmt/ephemeral-vs-app
+    - https://docs.flutter.dev/data-and-backend/state-mgmt/intro
+    - https://docs.flutter.dev/data-and-backend/state-mgmt/options
+    - https://docs.flutter.dev/data-and-backend/state-mgmt/simple
+    - https://docs.flutter.dev/get-started/flutter-for/react-native-devs
+    - https://docs.flutter.dev/get-started/fundamentals/local-caching
+    - https://docs.flutter.dev/get-started/fundamentals/state-management
+    - https://docs.flutter.dev/learn/pathway
+    - https://docs.flutter.dev/learn/pathway/tutorial/change-notifier
+    - https://docs.flutter.dev/learn/tutorial/change-notifier
+    - https://docs.flutter.dev/perf/isolates
+    - https://docs.flutter.dev/resources/architectural-overview
+    - https://docs.flutter.dev/ui
