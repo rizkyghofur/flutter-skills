@@ -2,10 +2,12 @@
 // for details. All rights reserved. Use of this source code is governed by a
 // BSD-style license that can be found in the LICENSE file.
 
-import 'dart:convert';
+import 'dart:io' as io;
+
 import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
 import 'package:logging/logging.dart';
+import 'package:path/path.dart' as p;
 
 import 'package:skills/src/services/gemini_service.dart';
 import 'package:test/test.dart';
@@ -192,113 +194,6 @@ Some content
     });
   });
 
-  group('GeminiService URL Validation', () {
-    late GeminiService service;
-
-    setUp(() {
-      Logger.root.level = Level.ALL;
-    });
-
-    test('retries when content contains URLs', () async {
-      var attempt = 0;
-
-      final client = MockClient((request) async {
-        attempt++;
-        if (attempt == 1) {
-          return http.Response(
-            jsonEncode({
-              'candidates': [
-                {
-                  'content': {
-                    'parts': [
-                      {'text': 'Here is a link: https://example.com'},
-                    ],
-                  },
-                },
-              ],
-            }),
-            200,
-          );
-        } else {
-          return http.Response(
-            jsonEncode({
-              'candidates': [
-                {
-                  'content': {
-                    'parts': [
-                      {'text': 'No links here.'},
-                    ],
-                  },
-                },
-              ],
-            }),
-            200,
-          );
-        }
-      });
-
-      service = GeminiService(
-        apiKey: 'key',
-        httpClient: client,
-        model: 'gemini-3-pro',
-      );
-
-      final result = await service.generateSkillContent(
-        'markdown',
-        'name',
-        'desc',
-        urls: ['urls'],
-      );
-
-      expect(attempt, 2);
-      expect(result, contains('No links here.'));
-      expect(result, isNot(contains('https://example.com')));
-    });
-
-    test('fails after retries if content always contains URLs', () async {
-      final client = MockClient((request) async {
-        return http.Response(
-          jsonEncode({
-            'candidates': [
-              {
-                'content': {
-                  'parts': [
-                    {'text': 'Link: https://example.com'},
-                  ],
-                },
-              },
-            ],
-          }),
-          200,
-        );
-      });
-
-      service = GeminiService(
-        apiKey: 'key',
-        httpClient: client,
-        model: 'gemini-3-pro',
-      );
-
-      // Capture logs to verify retries
-      final logs = <String>[];
-      final subscription = Logger.root.onRecord.listen(
-        (r) => logs.add(r.message),
-      );
-      addTearDown(subscription.cancel);
-
-      final result = await service.generateSkillContent(
-        'markdown',
-        'name',
-        'desc',
-        urls: ['urls'],
-      );
-
-      expect(result, isNull);
-      expect(logs, contains(contains('Retrying Gemini generation')));
-      expect(logs, contains(contains('Gemini generation failed')));
-    });
-  });
-
   group('fetchAndConvertContent', () {
     late Logger logger;
 
@@ -364,5 +259,95 @@ Some content
         throwsA(isA<http.ClientException>()),
       );
     });
+
+    test('throws Exception for insecure http:// URL', () async {
+      final client = MockClient((request) async {
+        return http.Response('content', 200);
+      });
+
+      expect(
+        () =>
+            fetchAndConvertContent(['http://example.com/doc1'], client, logger),
+        throwsA(
+          isA<Exception>().having(
+            (e) => e.toString(),
+            'message',
+            contains('Insecure HTTP URL found'),
+          ),
+        ),
+      );
+    });
+
+    test('fetches local file correctly relative to configDir', () async {
+      final tempDir = io.Directory.systemTemp.createTempSync('gemini_test');
+      try {
+        io.File(
+          p.join(tempDir.path, 'local_doc.md'),
+        ).writeAsStringSync('# Local Doc\ncontent');
+
+        final client = MockClient((request) async {
+          return http.Response('Not found', 404);
+        });
+
+        final result = await fetchAndConvertContent(
+          ['local_doc.md'],
+          client,
+          logger,
+          configDir: tempDir,
+        );
+
+        expect(result, contains('Local Doc'));
+        expect(result, contains('content'));
+      } finally {
+        tempDir.deleteSync(recursive: true);
+      }
+    });
+
+    test('throws Exception for missing local file', () async {
+      final tempDir = io.Directory.systemTemp.createTempSync('gemini_test');
+      try {
+        final client = MockClient((request) async {
+          return http.Response('Not found', 404);
+        });
+
+        expect(
+          () => fetchAndConvertContent(
+            ['missing.md'],
+            client,
+            logger,
+            configDir: tempDir,
+          ),
+          throwsA(
+            isA<Exception>().having(
+              (e) => e.toString(),
+              'message',
+              contains('Local resource file not found'),
+            ),
+          ),
+        );
+      } finally {
+        tempDir.deleteSync(recursive: true);
+      }
+    });
+
+    test(
+      'throws Exception for local file when no configDir is provided',
+      () async {
+        final client = MockClient((request) async {
+          return http.Response('Not found', 404);
+        });
+
+        expect(
+          () => fetchAndConvertContent(['local_doc.md'], client, logger),
+          throwsA(
+            isA<Exception>().having(
+              (e) => e.toString(),
+              'message',
+              contains('no configuration directory was provided to resolve it'),
+            ),
+          ),
+        );
+      },
+    );
   });
 }

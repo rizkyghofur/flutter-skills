@@ -17,6 +17,7 @@ class ValidateSkillCommand extends BaseSkillCommand {
   ValidateSkillCommand({
     required super.httpClient,
     super.outputDir,
+    super.environment,
     this.validationDir,
   }) : super(logger: Logger('ValidateSkillCommand'));
 
@@ -35,9 +36,19 @@ class ValidateSkillCommand extends BaseSkillCommand {
     SkillParams skill,
     GeminiService gemini,
     Directory outputDir,
-    int thinkingBudget,
-  ) async {
+    int thinkingBudget, {
+    Directory? configDir,
+  }) async {
     logger.info('Validating skill: ${skill.name}...');
+
+    for (final resource in skill.resources) {
+      if (!resource.startsWith('https://')) {
+        logger.severe(
+          '  Invalid resource URL: $resource. Must start with https://',
+        );
+        return;
+      }
+    }
 
     try {
       // Re-generate markdown content
@@ -45,6 +56,7 @@ class ValidateSkillCommand extends BaseSkillCommand {
         skill.resources,
         httpClient,
         logger,
+        configDir: configDir,
       );
 
       if (markdown.isEmpty) {

@@ -2,12 +2,13 @@
 // for details. All rights reserved. Use of this source code is governed by a
 // BSD-style license that can be found in the LICENSE file.
 
-import 'dart:io';
+import 'dart:io' as io;
 
 import 'package:google_cloud_ai_generativelanguage_v1beta/generativelanguage.dart';
 import 'package:http/http.dart' as http;
 import 'package:logging/logging.dart';
 import 'package:meta/meta.dart';
+import 'package:path/path.dart' as p;
 import 'package:retry/retry.dart';
 import 'package:yaml_writer/yaml_writer.dart';
 
@@ -66,11 +67,10 @@ class GeminiService {
     String skillName,
     String description, {
     String? instructions,
-    List<String> urls = const [],
     int thinkingBudget = defaultThinkingBudget,
   }) async {
     final service = GenerativeService(client: _client);
-    final lastModified = HttpDate.format(DateTime.now());
+    final lastModified = io.HttpDate.format(DateTime.now());
     final prompt = _createSkillPrompt(rawMarkdown, instructions);
 
     final request = _createRequest(
@@ -97,15 +97,6 @@ class GeminiService {
           throw const FormatException('Empty response from Gemini');
         }
 
-        // Check for URLs in the content
-        // This regex matches http://, https://, or www.
-        final urlPattern = RegExp(r'(https?:\/\/[^\s]+)|(www\.[^\s]+)');
-        if (urlPattern.hasMatch(text)) {
-          throw const FormatException(
-            'Generated content contains URLs, which is not allowed.',
-          );
-        }
-
         return text;
       }, onRetry: (e) => _logger.warning('Retrying Gemini generation: $e'));
 
@@ -114,11 +105,7 @@ class GeminiService {
       final frontMatterMap = {
         'name': skillName,
         'description': description,
-        'metadata': {
-          'urls': urls,
-          'model': _model,
-          'last_modified': lastModified,
-        },
+        'metadata': {'model': _model, 'last_modified': lastModified},
       };
 
       final frontmatter = '---\n${YamlWriter().write(frontMatterMap)}\n---\n';
@@ -192,15 +179,6 @@ On the very last line, output "Grade: [0-100]" representing overall quality of t
           throw const FormatException('Empty response from Gemini');
         }
 
-        // Check for URLs in the content
-        // This regex matches http://, https://, or www.
-        final urlPattern = RegExp(r'(https?:\/\/[^\s]+)|(www\.[^\s]+)');
-        if (urlPattern.hasMatch(text)) {
-          throw const FormatException(
-            'Generated content contains URLs, which is not allowed.',
-          );
-        }
-
         return text;
       }, onRetry: (e) => _logger.warning('Retrying Gemini validation: $e'));
 
@@ -256,8 +234,7 @@ DO NOT include any YAML frontmatter. Start immediately with the markdown content
 2. **Decision Trees**: If the content describes a process with multiple choices or steps, YOU MUST create a "Decision Logic" or "Flowchart" section to guide the agent.
 3. **Clarity**: Use clear headings, bullet points, and code blocks.
 4. **Format**: Do NOT wrap the entire output in a markdown code block (like ```markdown ... ```). Return raw markdown text.
-5. **No URLs**: The content must NOT include any URLs or links. External references should be described in text only.
-${instructions != null && instructions.isNotEmpty ? '6. **Special Instructions**: $instructions' : ''}
+${instructions != null && instructions.isNotEmpty ? '5. **Special Instructions**: $instructions' : ''}
 
 Raw Content:
 $markdown
@@ -293,18 +270,6 @@ $markdown
   }
 }
 
-/// Result of a skill validation.
-class ValidationResult {
-  /// Creates a new [ValidationResult].
-  ValidationResult(this.report, this.score);
-
-  /// The markdown validation report.
-  final String report;
-
-  /// The similarity score (0-100).
-  final int score;
-}
-
 class _ApiKeyClient extends http.BaseClient {
   _ApiKeyClient(this._inner, this._apiKey);
 
@@ -318,30 +283,63 @@ class _ApiKeyClient extends http.BaseClient {
   }
 }
 
-/// Fetches and converts content from a list of URLs.
+/// Fetches and converts content from a list of resources.
 ///
-/// Throws an [Exception] if fetching any URL fails. This strict behavior
+/// Throws an [Exception] if fetching any resource fails. This strict behavior
 /// prevents wasting Gemini tokens on generating low-quality skills when
 /// source material is missing.
 Future<String> fetchAndConvertContent(
-  List<String> urls,
+  List<String> resources,
   http.Client httpClient,
-  Logger logger,
-) async {
+  Logger logger, {
+  io.Directory? configDir,
+}) async {
   final converter = MarkdownConverter();
   final sb = StringBuffer();
-  for (final url in urls) {
-    logger.info('  Fetching $url...');
-    final response = await httpClient.get(Uri.parse(url));
-    if (response.statusCode == 200) {
-      sb
-        ..writeln('--- Raw content from $url ---')
-        ..writeln(converter.convert(response.body));
-    } else {
+  for (final resource in resources) {
+    logger.info('  Fetching $resource...');
+
+    if (resource.startsWith('http://')) {
       throw Exception(
-        'Failed to fetch $url: HTTP ${response.statusCode}. '
-        'Failing fast to save Gemini tokens.',
+        'Insecure HTTP URL found: $resource. '
+        'Only HTTPS URLs or relative file paths are allowed.',
       );
+    }
+
+    if (resource.startsWith('https://')) {
+      final response = await httpClient.get(Uri.parse(resource));
+      if (response.statusCode == 200) {
+        sb
+          ..writeln('--- Raw content from $resource ---')
+          ..writeln(converter.convert(response.body));
+      } else {
+        throw Exception(
+          'Failed to fetch $resource: HTTP ${response.statusCode}. '
+          'Failing fast to save Gemini tokens.',
+        );
+      }
+    } else {
+      if (configDir == null) {
+        throw Exception(
+          'Relative resource "$resource" found, but no configuration '
+          'directory was provided to resolve it.',
+        );
+      }
+      final file = io.File(p.join(configDir.path, resource));
+      if (!file.existsSync()) {
+        throw Exception('Local resource file not found: ${file.path}');
+      }
+
+      final String content;
+      try {
+        content = file.readAsStringSync();
+      } on io.FileSystemException {
+        throw Exception('Local resource file is not readable: ${file.path}');
+      }
+
+      sb
+        ..writeln('--- Raw content from $resource ---')
+        ..writeln(content);
     }
   }
   return sb.toString();

@@ -15,7 +15,7 @@ import 'package:test/test.dart';
 
 void main() {
   group('ValidateSkillCommand', () {
-    late CommandRunner runner;
+    late CommandRunner<void> runner;
     late Directory tempDir;
     late Directory skillsDir;
     late Directory validationDir;
@@ -53,7 +53,7 @@ void main() {
       final skillFile = File(p.join(skillDir.path, 'SKILL.md'));
       await skillFile.writeAsString('content');
 
-      final configFile = File(p.join(tempDir.path, 'config.json'));
+      final configFile = File(p.join(tempDir.path, 'config.yaml'));
       await configFile.writeAsString(
         jsonEncode([
           {
@@ -64,9 +64,10 @@ void main() {
         ]),
       );
 
-      runner = CommandRunner('skills', 'Test runner')
+      runner = CommandRunner<void>('skills', 'Test runner')
         ..addCommand(
           ValidateSkillCommand(
+            environment: {'GEMINI_API_KEY': 'test-key'},
             outputDir: skillsDir,
             validationDir: validationDir,
             httpClient: mockClient,
@@ -87,7 +88,7 @@ void main() {
       final skillFile = File(p.join(skillDir.path, 'SKILL.md'));
       await skillFile.writeAsString('Existing content');
 
-      final configFile = File(p.join(tempDir.path, 'config.json'));
+      final configFile = File(p.join(tempDir.path, 'config.yaml'));
       await configFile.writeAsString(
         jsonEncode([
           {
@@ -133,9 +134,10 @@ void main() {
         return http.Response('Not Found', 404);
       });
 
-      runner = CommandRunner('skills', 'Test runner')
+      runner = CommandRunner<void>('skills', 'Test runner')
         ..addCommand(
           ValidateSkillCommand(
+            environment: {'GEMINI_API_KEY': 'test-key'},
             outputDir: skillsDir,
             validationDir: validationDir,
             httpClient: mockClient,
@@ -161,7 +163,7 @@ void main() {
       await skill2Dir.create();
       File(p.join(skill2Dir.path, 'SKILL.md')).writeAsStringSync('content');
 
-      final configFile = File(p.join(tempDir.path, 'config.json'));
+      final configFile = File(p.join(tempDir.path, 'config.yaml'));
       await configFile.writeAsString(
         jsonEncode([
           {
@@ -177,9 +179,10 @@ void main() {
         ]),
       );
 
-      runner = CommandRunner('skills', 'Test runner')
+      runner = CommandRunner<void>('skills', 'Test runner')
         ..addCommand(
           ValidateSkillCommand(
+            environment: {'GEMINI_API_KEY': 'test-key'},
             outputDir: skillsDir,
             validationDir: validationDir,
             httpClient: mockClient,
@@ -195,11 +198,15 @@ void main() {
     });
 
     test('logs severe error when config file not found', () async {
-      final path = p.join(tempDir.path, 'NON_EXISTENT.json');
+      final path = p.join(tempDir.path, 'NON_EXISTENT.yaml');
 
-      runner = CommandRunner('skills', 'Test runner')
+      runner = CommandRunner<void>('skills', 'Test runner')
         ..addCommand(
-          ValidateSkillCommand(outputDir: skillsDir, httpClient: mockClient),
+          ValidateSkillCommand(
+            environment: {'GEMINI_API_KEY': 'test-key'},
+            outputDir: skillsDir,
+            httpClient: mockClient,
+          ),
         );
 
       await IOOverrides.runZoned(() async {
@@ -213,7 +220,7 @@ void main() {
       const skillName = 'missing-skill';
       // Do NOT create skill directory or file
 
-      final configFile = File(p.join(tempDir.path, 'config.json'));
+      final configFile = File(p.join(tempDir.path, 'config.yaml'));
       await configFile.writeAsString(
         jsonEncode([
           {
@@ -238,9 +245,13 @@ void main() {
         return http.Response('Not Found', 404);
       });
 
-      runner = CommandRunner('skills', 'Test runner')
+      runner = CommandRunner<void>('skills', 'Test runner')
         ..addCommand(
-          ValidateSkillCommand(outputDir: skillsDir, httpClient: mockClient),
+          ValidateSkillCommand(
+            environment: {'GEMINI_API_KEY': 'test-key'},
+            outputDir: skillsDir,
+            httpClient: mockClient,
+          ),
         );
 
       await IOOverrides.runZoned(() async {
@@ -256,7 +267,7 @@ void main() {
       await skillDir.create();
       File(p.join(skillDir.path, 'SKILL.md')).writeAsStringSync('content');
 
-      final configFile = File(p.join(tempDir.path, 'config.json'));
+      final configFile = File(p.join(tempDir.path, 'config.yaml'));
       await configFile.writeAsString(
         jsonEncode([
           {
@@ -272,9 +283,13 @@ void main() {
         throw Exception('Network Error');
       });
 
-      runner = CommandRunner('skills', 'Test runner')
+      runner = CommandRunner<void>('skills', 'Test runner')
         ..addCommand(
-          ValidateSkillCommand(outputDir: skillsDir, httpClient: mockClient),
+          ValidateSkillCommand(
+            environment: {'GEMINI_API_KEY': 'test-key'},
+            outputDir: skillsDir,
+            httpClient: mockClient,
+          ),
         );
 
       await runner.run(['validate-skill', configFile.path]);
@@ -295,7 +310,7 @@ void main() {
         await skillDir.create();
         File(p.join(skillDir.path, 'SKILL.md')).writeAsStringSync('content');
 
-        final configFile = File(p.join(tempDir.path, 'config.json'));
+        final configFile = File(p.join(tempDir.path, 'config.yaml'));
         await configFile.writeAsString(
           jsonEncode([
             {
@@ -317,9 +332,10 @@ void main() {
           return http.Response('Not Found', 404);
         });
 
-        runner = CommandRunner('skills', 'Test runner')
+        runner = CommandRunner<void>('skills', 'Test runner')
           ..addCommand(
             ValidateSkillCommand(
+              environment: {'GEMINI_API_KEY': 'test-key'},
               outputDir: skillsDir,
               validationDir: validationDir,
               httpClient: mockClient,
@@ -344,7 +360,7 @@ void main() {
         p.join(skillDir.path, 'SKILL.md'),
       ).writeAsStringSync('name: $skillName\nContent');
 
-      final configFile = File(p.join(tempDir.path, 'config.json'));
+      final configFile = File(p.join(tempDir.path, 'config.yaml'));
       await configFile.writeAsString(
         jsonEncode([
           {
@@ -366,9 +382,10 @@ void main() {
         return http.Response('Not Found', 404);
       });
 
-      runner = CommandRunner('skills', 'Test runner')
+      runner = CommandRunner<void>('skills', 'Test runner')
         ..addCommand(
           ValidateSkillCommand(
+            environment: {'GEMINI_API_KEY': 'test-key'},
             outputDir: skillsDir,
             validationDir: validationDir,
             httpClient: mockClient,
@@ -388,7 +405,7 @@ void main() {
       final skillFile = File(p.join(skillDir.path, 'SKILL.md'));
       await skillFile.writeAsString('Invalid content without frontmatter');
 
-      final configFile = File(p.join(tempDir.path, 'config.json'));
+      final configFile = File(p.join(tempDir.path, 'config.yaml'));
       await configFile.writeAsString(
         jsonEncode([
           {
@@ -413,9 +430,10 @@ void main() {
         return http.Response('Not Found', 404);
       });
 
-      runner = CommandRunner('skills', 'Test runner')
+      runner = CommandRunner<void>('skills', 'Test runner')
         ..addCommand(
           ValidateSkillCommand(
+            environment: {'GEMINI_API_KEY': 'test-key'},
             outputDir: skillsDir,
             validationDir: validationDir,
             httpClient: mockClient,
@@ -455,7 +473,7 @@ description: Desc
 Content
 ''');
 
-      final configFile = File(p.join(tempDir.path, 'config.json'));
+      final configFile = File(p.join(tempDir.path, 'config.yaml'));
       await configFile.writeAsString(
         jsonEncode([
           {
@@ -492,9 +510,10 @@ Content
         return http.Response('Not Found', 404);
       });
 
-      runner = CommandRunner('skills', 'Test runner')
+      runner = CommandRunner<void>('skills', 'Test runner')
         ..addCommand(
           ValidateSkillCommand(
+            environment: {'GEMINI_API_KEY': 'test-key'},
             outputDir: skillsDir,
             httpClient: mockClient,
             validationDir: validationDir,
@@ -510,6 +529,140 @@ Content
         geminiRequests.first,
         contains('--- Raw content from https://example.com/source ---'),
       );
+    });
+    test(
+      'logs warning when fetchAndConvertContent returns empty string',
+      () async {
+        const skillName = 'empty-fetch-val';
+        final skillDir = Directory(p.join(skillsDir.path, skillName));
+        await skillDir.create();
+        File(
+          p.join(skillDir.path, 'SKILL.md'),
+        ).writeAsStringSync('name: $skillName\ncontent');
+
+        final configFile = File(p.join(tempDir.path, 'config.yaml'));
+        await configFile.writeAsString(
+          jsonEncode([
+            {'name': skillName, 'description': 'Desc', 'resources': <String>[]},
+          ]),
+        );
+
+        final mockClient = MockClient(
+          (request) async => http.Response('', 200),
+        );
+
+        runner = CommandRunner<void>('skills', 'Test runner')
+          ..addCommand(
+            ValidateSkillCommand(
+              environment: {'GEMINI_API_KEY': 'test-key'},
+              outputDir: skillsDir,
+              httpClient: mockClient,
+            ),
+          );
+
+        await runner.run(['validate-skill', configFile.path]);
+        expect(
+          logs,
+          contains(
+            '  No content fetched for empty-fetch-val. Skipping validation.',
+          ),
+        );
+      },
+    );
+
+    test('logs severe error on generic exception during validation', () async {
+      const skillName = 'exception-val';
+      final skillDir = Directory(p.join(skillsDir.path, skillName));
+      await skillDir.create();
+      File(p.join(skillDir.path, 'SKILL.md')).writeAsStringSync('content');
+
+      final configFile = File(p.join(tempDir.path, 'config.yaml'));
+      await configFile.writeAsString(
+        jsonEncode([
+          {
+            'name': skillName,
+            'description': 'Desc',
+            'resources': ['https://example.com/source'],
+          },
+        ]),
+      );
+
+      final mockClient = MockClient(
+        (request) async => throw Exception('Generic Error'),
+      );
+
+      runner = CommandRunner<void>('skills', 'Test runner')
+        ..addCommand(
+          ValidateSkillCommand(
+            environment: {'GEMINI_API_KEY': 'test-key'},
+            outputDir: skillsDir,
+            httpClient: mockClient,
+          ),
+        );
+
+      await runner.run(['validate-skill', configFile.path]);
+      expect(
+        logs,
+        contains(
+          contains('Error validating $skillName: Exception: Generic Error'),
+        ),
+      );
+    });
+
+    test('validates with missing metadata fallbacks', () async {
+      const skillName = 'fallback-meta';
+      final skillDir = Directory(p.join(skillsDir.path, skillName));
+      await skillDir.create();
+      File(
+        p.join(skillDir.path, 'SKILL.md'),
+      ).writeAsStringSync('name: $skillName\ncontent WITHOUT metadata');
+
+      final configFile = File(p.join(tempDir.path, 'config.yaml'));
+      await configFile.writeAsString(
+        jsonEncode([
+          {
+            'name': skillName,
+            'description': 'Desc',
+            'resources': ['https://example.com/source'],
+          },
+        ]),
+      );
+
+      final mockClient = MockClient((request) async {
+        if (request.url.toString() == 'https://example.com/source') {
+          return http.Response('# Source', 200);
+        }
+        if (request.url.toString().contains('generativelanguage')) {
+          return http.Response(
+            jsonEncode({
+              'candidates': [
+                {
+                  'content': {
+                    'parts': [
+                      {'text': 'Generated Content\nGrade: 100'},
+                    ],
+                  },
+                },
+              ],
+            }),
+            200,
+          );
+        }
+        return http.Response('Not Found', 404);
+      });
+
+      runner = CommandRunner<void>('skills', 'Test runner')
+        ..addCommand(
+          ValidateSkillCommand(
+            environment: {'GEMINI_API_KEY': 'test-key'},
+            outputDir: skillsDir,
+            validationDir: validationDir,
+            httpClient: mockClient,
+          ),
+        );
+
+      await runner.run(['validate-skill', configFile.path]);
+      expect(logs, contains(contains('Validation report written to')));
     });
   });
 }

@@ -14,8 +14,11 @@ import 'base_skill_command.dart';
 /// Command to generate skills from a configuration file.
 class GenerateSkillCommand extends BaseSkillCommand {
   /// Creates a new [GenerateSkillCommand].
-  GenerateSkillCommand({required super.httpClient, super.outputDir})
-    : super(logger: Logger('GenerateSkillCommand'));
+  GenerateSkillCommand({
+    required super.httpClient,
+    super.outputDir,
+    super.environment,
+  }) : super(logger: Logger('GenerateSkillCommand'));
 
   @override
   String get name => 'generate-skill';
@@ -28,15 +31,26 @@ class GenerateSkillCommand extends BaseSkillCommand {
     SkillParams skill,
     GeminiService gemini,
     Directory outputDir,
-    int thinkingBudget,
-  ) async {
+    int thinkingBudget, {
+    Directory? configDir,
+  }) async {
     logger.info('Generating skill: ${skill.name}...');
+
+    for (final resource in skill.resources) {
+      if (!resource.startsWith('https://')) {
+        logger.severe(
+          '  Invalid resource URL: $resource. Must start with https://',
+        );
+        return;
+      }
+    }
 
     try {
       final combinedMarkdown = await fetchAndConvertContent(
         skill.resources,
         httpClient,
         logger,
+        configDir: configDir,
       );
 
       if (combinedMarkdown.isEmpty) {
@@ -49,7 +63,6 @@ class GenerateSkillCommand extends BaseSkillCommand {
         skill.name,
         skill.description,
         instructions: skill.instructions,
-        urls: skill.resources,
         thinkingBudget: thinkingBudget,
       );
 
