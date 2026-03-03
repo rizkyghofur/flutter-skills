@@ -553,3 +553,84 @@
     - https://docs.flutter.dev/release/breaking-changes/flutter-generate-i10n-source
     - https://docs.flutter.dev/release/breaking-changes/material-localized-strings
     - https://docs.flutter.dev/release/breaking-changes/text-field-material-localizations
+- name: flutter-accessibility
+  description: Configure your app to support assistive technologies like Screen Readers
+  instructions: |
+   Accessibility is crucial for building high-quality applications that can be
+   used by a broad range of users. Poorly designed applications create barriers
+   for people of all ages. There is a moral and legal imperative to ensure
+   universal access to information systems, as stated by the UN Convention on
+   the Rights of Persons with Disabilities. Many countries enforce accessibility
+   as a requirement, and companies recognize the business advantages of
+   maximizing access to their services. It is strongly encouraged to include an
+   accessibility checklist as a key criterion before shipping an app.
+   
+   Accessibility standards and regulations help ensure products are accessible
+   to people with disabilities. Many of these have been enacted into laws and
+   policies, making them requirements for products and services. Flutter
+   supports developers in making their apps more accessible by providing
+   first-class framework support for accessibility, in addition to what the
+   underlying operating system offers. This support includes UI Design and
+   styling, and Assistive Technologies like Screen Readers.
+   
+   To create an accessible app, UI design should consider accessibility. Key
+   aspects of accessible UI design and styling include large fonts, sufficient
+   contrast, and appropriate tap target sizes. Flutter text widgets respect the
+   operating system's font size settings, calculating font sizes automatically
+   based on the OS setting. Developers should ensure their layout has enough
+   room to render all its contents when font sizes are increased. Sufficient
+   color contrast makes text and images easier to read, benefiting users with
+   visual impairments and all users in extreme lighting conditions. The W3C
+   recommends a contrast ratio of at least 4.5:1 for small text and 3.0:1 for
+   large text.
+   
+   Flutter provides a catalog of accessibility widgets to help make apps
+   accessible. These include `ExcludeSemantics`, which drops the semantics of
+   its descendants, `MergeSemantics`, which merges the semantics of its
+   descendants, and `Semantics`, which annotates the widget tree with a
+   description of the meaning of widgets for accessibility tools.
+   
+   For web accessibility, Flutter renders its UI on a single canvas, requiring a
+   special layer to expose the UI's meaning and structure to web browsers.
+   Flutter's web accessibility is not on by default for performance reasons.
+   Users can enable it by pressing an invisible button with `aria-label="Enable
+   accessibility"`, which then reflects accessibility information in the DOM
+   tree. Alternatively, accessibility mode can be turned on in code by adding
+   `SemanticsBinding.instance.ensureSemantics();` when running the app. Semantic
+   roles define the purpose of a UI element, helping screen readers and other
+   assistive tools interpret and present the application effectively. These
+   roles can indicate if a widget is a button, link, heading, slider, or part of
+   a table. While standard Flutter widgets often provide semantics
+   automatically, custom components may need explicit role assignment to be
+   comprehensible to screen reader users. Flutter provides the `Semantics`
+   widget with the `SemanticsRole` enum to assign specific roles to widgets.
+   These Flutter-specific roles are translated into corresponding ARIA roles in
+   the web page's HTML structure. Using standard widgets like `TabBar`,
+   `MenuAnchor`, and `Table` is preferred as they handle many accessibility
+   aspects out-of-the-box. For custom components or when default semantics are
+   insufficient, the `Semantics` widget can be used to define or override roles.
+   
+   Adaptive design is about the UI being usable in the space, while responsive
+   design is about fitting the UI into the space. An adaptive app selects the
+   appropriate layout (e.g., bottom nav instead of side panel) and input devices
+   (e.g., mouse vs. touch) to feel natural on the current device. Responsive
+   design adjusts the placement of design elements to fit the available space.
+   Flutter aims to create a framework that allows apps from a single codebase to
+   look and feel great on any platform, accommodating various screen sizes and
+   input devices. It's important to design to the strengths of each form factor,
+   considering whether to focus on specific capabilities or even remove features
+   on certain device categories.
+
+  resources:
+    - https://docs.flutter.dev/ui/accessibility/assistive-technologies
+    - https://docs.flutter.dev/ui/accessibility/accessibility-testing
+    - https://docs.flutter.dev/release/breaking-changes/tooltip-semantics-order
+    - https://docs.flutter.dev/ui/widgets/accessibility
+    - https://docs.flutter.dev/accessibility-and-localization/accessibility
+    - https://docs.flutter.dev/ui/accessibility
+    - https://docs.flutter.dev/ui/adaptive-responsive
+    - https://docs.flutter.dev/ui/adaptive-responsive/best-practices
+    - https://docs.flutter.dev/ui/accessibility/ui-design-and-styling
+    - https://docs.flutter.dev/ui/adaptive-responsive/input
+    - https://docs.flutter.dev/ui/accessibility/web-accessibility
+    - https://docs.flutter.dev/resources/glossary
