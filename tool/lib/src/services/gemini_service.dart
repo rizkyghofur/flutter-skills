@@ -67,7 +67,6 @@ class GeminiService {
     String skillName,
     String description, {
     String? instructions,
-    List<String> resources = const [],
     int thinkingBudget = defaultThinkingBudget,
   }) async {
     final service = GenerativeService(client: _client);
@@ -115,11 +114,7 @@ class GeminiService {
       final frontMatterMap = {
         'name': skillName,
         'description': description,
-        'metadata': {
-          'resources': resources,
-          'model': _model,
-          'last_modified': lastModified,
-        },
+        'metadata': {'model': _model, 'last_modified': lastModified},
       };
 
       final frontmatter = '---\n${YamlWriter().write(frontMatterMap)}\n---\n';

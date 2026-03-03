@@ -250,7 +250,6 @@ Some content
         'markdown',
         'name',
         'desc',
-        resources: ['urls'],
       );
 
       expect(attempt, 2);
@@ -293,7 +292,6 @@ Some content
         'markdown',
         'name',
         'desc',
-        resources: ['urls'],
       );
 
       expect(result, isNull);

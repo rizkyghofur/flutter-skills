@@ -51,7 +51,6 @@ class GenerateSkillCommand extends BaseSkillCommand {
         skill.name,
         skill.description,
         instructions: skill.instructions,
-        resources: skill.resources,
         thinkingBudget: thinkingBudget,
       );
 
