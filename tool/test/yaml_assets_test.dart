@@ -14,12 +14,14 @@ void main() {
     p.normalize(p.join(Directory.current.path, '..', 'tool', 'resources')),
   );
 
-  test('tool/resources directory exists', () {
-    expect(
-      resourcesDir.existsSync(),
-      isTrue,
-      reason: 'tool/resources directory should exist',
-    );
+  test(
+    'tool/resources directory exists',
+    () {
+      expect(
+        resourcesDir.existsSync(),
+        isTrue,
+        reason: 'tool/resources directory should exist',
+      );
     },
     skip: !resourcesDir.existsSync() ? 'Directory not present' : false,
   );

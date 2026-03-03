@@ -14,12 +14,14 @@ void main() {
       path.normalize(path.join(Directory.current.path, '..', 'skills')),
     );
 
-    test('skills directory exists', () {
-      expect(
-        skillsDir.existsSync(),
-        isTrue,
-        reason: 'skills directory should exist',
-      );
+    test(
+      'skills directory exists',
+      () {
+        expect(
+          skillsDir.existsSync(),
+          isTrue,
+          reason: 'skills directory should exist',
+        );
       },
       skip: !skillsDir.existsSync() ? 'Directory not present' : false,
     );
