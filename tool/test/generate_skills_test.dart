@@ -165,7 +165,7 @@ void main() {
       );
       runner.addCommand(command);
 
-      await runner.run(['generate-skill', '--debug', videoFile.path]);
+      await runner.run(['generate-skill', videoFile.path]);
 
       // Verify Logs
       expect(logs, contains(contains('Generating skill: success...')));
@@ -235,7 +235,6 @@ void main() {
 
       await runner.run([
         'generate-skill',
-        '--debug',
         configFile.path,
         '--directory',
         skillsDir.path,
