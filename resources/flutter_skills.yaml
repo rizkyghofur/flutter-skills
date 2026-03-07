@@ -1459,3 +1459,22 @@
     - https://docs.flutter.dev/resources/architectural-overview
     - https://docs.flutter.dev/resources/bootstrap-into-dart
     - https://docs.flutter.dev/resources/faq
+- name: flutter-home-screen-widget
+  description: Adding a Home Screen widget to your Flutter App
+  instructions: |
+    Home screen widgets allow users to see and interact with your app's data
+    directly from their device's home screen. Adding a home screen widget to a
+    Flutter app involves using native frameworks for each platform (SwiftUI for
+    iOS and XML for Android) to create the widget's UI, while sharing data and
+    resources between the Flutter app and the native components.
+
+    Common approaches involve using the `home_widget` package to facilitate
+    communication between the Flutter app and the native widget. On iOS, this
+    typically involves creating a Widget Extension target in Xcode and using
+    App Groups to share data. On Android, you create an `AppWidgetProvider`
+    and use `SharedPreferences` for data sharing. Key techniques include
+    sending data updates to the widget, using custom fonts, and even
+    rendering Flutter widgets as images for display in the native widget UI.
+  resources:
+    - https://codelabs.developers.google.com/flutter-home-screen-widgets#0
+    - https://pub.dev/packages/home_widget
