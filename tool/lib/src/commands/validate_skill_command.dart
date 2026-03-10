@@ -108,7 +108,7 @@ class ValidateSkillCommand extends BaseSkillCommand {
         logger
           ..info('  [DRY RUN] Would validate skill: ${skill.name}')
           ..info(
-            '  [DRY RUN] existing file size: ${existingSkillFileContent.length} characters -> new fetched content size: ${markdown.length} characters.',
+            '  [DRY RUN] existing file size: ${existingSkillFileContent.split(' ').length} tokens -> new fetched content size: ${markdown.split(' ').length} tokens.',
           );
         return;
       }

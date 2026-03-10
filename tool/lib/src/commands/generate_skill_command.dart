@@ -66,7 +66,7 @@ class GenerateSkillCommand extends BaseSkillCommand {
         logger
           ..info('  [DRY RUN] Would generate skill: ${skill.name}')
           ..info(
-            '  [DRY RUN] Prompt size: ${combinedMarkdown.length} characters.',
+            '  [DRY RUN] Prompt size: ${combinedMarkdown.split(' ').length} tokens.',
           );
         return;
       }

@@ -77,7 +77,7 @@ class UpdateSkillCommand extends BaseSkillCommand {
         logger
           ..info('  [DRY RUN] Would update skill: ${skill.name}')
           ..info(
-            '  [DRY RUN] Original file size: ${existingContent.length} characters -> Raw content size: ${combinedMarkdown.length} characters.',
+            '  [DRY RUN] Original file size: ${existingContent.split(' ').length} tokens -> Raw content size: ${combinedMarkdown.split(' ').length} tokens.',
           );
         return;
       }
