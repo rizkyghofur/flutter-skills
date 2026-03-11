@@ -347,6 +347,56 @@
     - https://docs.flutter.dev/cookbook/design/themes
     - https://docs.flutter.dev/ui/adaptive-responsive/idioms
     - https://docs.flutter.dev/ui
+- name: flutter-form
+  description: Build a form with validation
+  instructions: |
+    To build a form with validation, you need to create a `Form` widget with a
+    `GlobalKey`. This `GlobalKey` uniquely identifies the `Form` widget and
+    allows for validation later. It's recommended to create the form as a
+    `StatefulWidget` to store the `GlobalKey<FormState>()` once, as generating a
+    new `GlobalKey` each time the `build` method runs is resource-expensive. The
+    `Form` widget acts as a container for grouping and validating multiple form
+    fields. While a `GlobalKey` is the recommended way to access a form,
+    `Form.of()` can be used in more complex widget trees.
+
+    Next, add a `TextFormField` with validation logic. The `TextFormField`
+    widget renders a material design text field and can display validation
+    errors. Input validation is done by providing a `validator()` function to
+    the `TextFormField`. If the user's input is invalid, the `validator`
+    function should return a `String` containing an error message. If there are
+    no errors, the `validator` must return `null`. For example, a validator can
+    ensure the `TextFormField` isn't empty by returning a message like 'Please
+    enter some text' if the value is null or empty, otherwise returning null.
+    `TextFormField` is a convenience widget that pre-wraps a `TextField` in a
+    `FormField`. Each individual form field should be wrapped in a `FormField`
+    widget with the `Form` widget as a common ancestor.
+
+    Finally, create a button to validate and submit the form. When the user
+    attempts to submit the form, you check if the form is valid. To validate the
+    form, use the `_formKey` created earlier. The `_formKey.currentState`
+    accessor provides access to the `FormState`, which is automatically created
+    by Flutter when building a `Form`. The `FormState` class contains the
+    `validate()` method. When `validate()` is called, it runs the `validator()`
+    function for each text field in the form. If all validations pass,
+    `validate()` returns `true`. If any text field contains errors, `validate()`
+    rebuilds the form to display error messages and returns `false`. If the form
+    is valid, you can display a success message (e.g., a `SnackBar`). If it's
+    not valid, the error messages from the `TextFormField` validators will be
+    displayed. The `FormState` also allows you to save, reset, and validate each
+    `FormField` that descends from the `Form`.
+  resources:
+    - https://docs.flutter.dev/ai-best-practices/developer-experience
+    - https://docs.flutter.dev/app-architecture/recommendations
+    - https://docs.flutter.dev/cookbook/forms
+    - https://docs.flutter.dev/cookbook/forms/text-input
+    - https://docs.flutter.dev/cookbook/forms/validation
+    - https://docs.flutter.dev/flutter-for/react-native-devs
+    - https://docs.flutter.dev/flutter-for/xamarin-forms-devs
+    - https://docs.flutter.dev/get-started/fundamentals/user-input
+    - https://docs.flutter.dev/release/breaking-changes/form-field-autovalidation-api
+    - https://docs.flutter.dev/ui/adaptive-responsive/best-practices
+    - https://docs.flutter.dev/ui/interactivity/input
+
 - name: flutter-routing-and-navigation
   description: Move between or deep link to different screens or routes within a Flutter application
   instructions: |
