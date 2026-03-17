@@ -24,28 +24,28 @@ npx skills update flutter/skills
 
 | Skill | Description |
 |---|---|
-| [flutter-accessibility](skills/flutter-accessibility/SKILL.md) | Configure your Flutter app to support assistive technologies like Screen Readers |
-| [flutter-animation](skills/flutter-animation/SKILL.md) | Add animated effects to your Flutter app |
-| [flutter-app-size](skills/flutter-app-size/SKILL.md) | Measure and reduce the size of the Flutter app bundle, APK, or IPA |
-| [flutter-architecture](skills/flutter-architecture/SKILL.md) | Build an app using the Flutter team's recommended app architecture |
-| [flutter-caching](skills/flutter-caching/SKILL.md) | Cache data in a Flutter app |
-| [flutter-concurrency](skills/flutter-concurrency/SKILL.md) | Execute long-running tasks in a background thread in Flutter |
-| [flutter-databases](skills/flutter-databases/SKILL.md) | Work with databases in a Flutter app |
-| [flutter-environment-setup-linux](skills/flutter-environment-setup-linux/SKILL.md) | Set up a Linux environment for Flutter development |
-| [flutter-environment-setup-macos](skills/flutter-environment-setup-macos/SKILL.md) | Set up a macOS environment for Flutter development |
-| [flutter-environment-setup-windows](skills/flutter-environment-setup-windows/SKILL.md) | Set up a Windows environment for Flutter development |
-| [flutter-http-and-json](skills/flutter-http-and-json/SKILL.md) | Make HTTP requests and encode / decode JSON in a Flutter app |
-| [flutter-layout](skills/flutter-layout/SKILL.md) | How to build your app's layout using Flutter's layout widgets and constraint system |
-| [flutter-localization](skills/flutter-localization/SKILL.md) | Configure your Flutter app to support different languages and regions |
-| [flutter-native-interop](skills/flutter-native-interop/SKILL.md) | Interoperate with native APIs in a Flutter app on Android, iOS, and the web |
-| [flutter-performance](skills/flutter-performance/SKILL.md) | Optimize the performance of your Flutter app |
-| [flutter-platform-views](skills/flutter-platform-views/SKILL.md) | Add a native view into your Flutter app |
-| [flutter-plugins](skills/flutter-plugins/SKILL.md) | Build a Flutter plugin that provides native interop for other Flutter apps to use |
-| [flutter-routing-and-navigation](skills/flutter-routing-and-navigation/SKILL.md) | Move between or deep link to different screens or routes within a Flutter application |
-| [flutter-state-management](skills/flutter-state-management/SKILL.md) | Manage state in your Flutter application |
-| [flutter-testing](skills/flutter-testing/SKILL.md) | Add Flutter unit tests, widget tests, or integration tests |
-| [flutter-theming](skills/flutter-theming/SKILL.md) | How to customize your app's theme using Flutter's theming system |
-
+| [flutter-adding-home-screen-widgets](skills/flutter-adding-home-screen-widgets/SKILL.md) | Adds home screen widgets to a Flutter app for Android and iOS. Use when providing glanceable app information or quick actions on the device home screen. |
+| [flutter-animating-apps](skills/flutter-animating-apps/SKILL.md) | Implements animated effects, transitions, and motion in a Flutter app. Use when adding visual feedback, shared element transitions, or physics-based animations. |
+| [flutter-architecting-apps](skills/flutter-architecting-apps/SKILL.md) | Architects a Flutter application using the recommended layered approach (UI, Logic, Data). Use when structuring a new project or refactoring for scalability. |
+| [flutter-building-forms](skills/flutter-building-forms/SKILL.md) | Builds Flutter forms with validation and user input handling. Use when creating login screens, data entry forms, or any multi-field user input. |
+| [flutter-building-layouts](skills/flutter-building-layouts/SKILL.md) | Builds Flutter layouts using the constraint system and layout widgets. Use when creating or refining the UI structure of a Flutter application. |
+| [flutter-building-plugins](skills/flutter-building-plugins/SKILL.md) | Builds Flutter plugins that provide native interop for other apps to use. Use when creating reusable packages that bridge Flutter with platform-specific functionality. |
+| [flutter-caching-data](skills/flutter-caching-data/SKILL.md) | Implements caching strategies for Flutter apps to improve performance and offline support. Use when retaining app data locally to reduce network requests or speed up startup. |
+| [flutter-embedding-native-views](skills/flutter-embedding-native-views/SKILL.md) | Embeds native Android, iOS, or macOS views into a Flutter app. Use when integrating complex native components like maps or web views. |
+| [flutter-handling-concurrency](skills/flutter-handling-concurrency/SKILL.md) | Executes long-running tasks in background isolates to keep the UI responsive. Use when performing heavy computations or parsing large datasets. |
+| [flutter-handling-http-and-json](skills/flutter-handling-http-and-json/SKILL.md) | Executes HTTP requests and handles JSON serialization in a Flutter app. Use when integrating with REST APIs or parsing structured data from external sources. |
+| [flutter-implementing-navigation-and-routing](skills/flutter-implementing-navigation-and-routing/SKILL.md) | Handles routing, navigation, and deep linking in a Flutter application. Use when moving between screens or setting up URL-based navigation. |
+| [flutter-improving-accessibility](skills/flutter-improving-accessibility/SKILL.md) | Configures a Flutter app to support assistive technologies like Screen Readers. Use when ensuring an application is usable for people with disabilities. |
+| [flutter-interoperating-with-native-apis](skills/flutter-interoperating-with-native-apis/SKILL.md) | Interoperates with native platform APIs on Android, iOS, and the web. Use when accessing device-specific features not available in Dart or calling existing native code. |
+| [flutter-localizing-apps](skills/flutter-localizing-apps/SKILL.md) | Configures a Flutter app to support multiple languages and regions. Use when preparing an application for international markets and diverse user locales. |
+| [flutter-managing-state](skills/flutter-managing-state/SKILL.md) | Manages application and ephemeral state in a Flutter app. Use when sharing data between widgets or handling complex UI state transitions. |
+| [flutter-reducing-app-size](skills/flutter-reducing-app-size/SKILL.md) | Measures and optimizes the size of Flutter application bundles for deployment. Use when minimizing download size or meeting app store package constraints. |
+| [flutter-setting-up-on-linux](skills/flutter-setting-up-on-linux/SKILL.md) | Sets up a Linux environment for Flutter development. Use when configuring a Linux machine to run, build, or deploy Flutter applications. |
+| [flutter-setting-up-on-macos](skills/flutter-setting-up-on-macos/SKILL.md) | Sets up a macOS environment for Flutter development. Use when configuring a macOS machine to run, build, or deploy Flutter applications for iOS or macOS. |
+| [flutter-setting-up-on-windows](skills/flutter-setting-up-on-windows/SKILL.md) | Sets up a Windows environment for Flutter development. Use when configuring a Windows machine to run, build, or deploy Flutter applications for Windows desktop or Android. |
+| [flutter-testing-apps](skills/flutter-testing-apps/SKILL.md) | Implements unit, widget, and integration tests for a Flutter app. Use when ensuring code quality and preventing regressions through automated testing. |
+| [flutter-theming-apps](skills/flutter-theming-apps/SKILL.md) | Customizes the visual appearance of a Flutter app using the theming system. Use when defining global styles, colors, or typography for an application. |
+| [flutter-working-with-databases](skills/flutter-working-with-databases/SKILL.md) | Manages local data persistence using SQLite or other database solutions. Use when a Flutter app needs to store, query, or synchronize large amounts of structured data on the device. |
 ## Contributing
 
 To contribute skills, see the instructions in [tool/README.md](tool/README.md).
