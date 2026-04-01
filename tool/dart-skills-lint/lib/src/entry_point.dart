@@ -1,3 +1,7 @@
+// Copyright (c) 2026, the Dart project authors.  Please see the AUTHORS file
+// for details. All rights reserved. Use of this source code is governed by a
+// BSD-style license that can be found in the LICENSE file.
+
 import 'dart:convert';
 import 'dart:io';
 
@@ -246,7 +250,9 @@ Future<void> runApp(List<String> args) async {
 
     if (!result.isValid) {
       globalAnyFailed = true;
-      if (fastFail) break;
+      if (fastFail) {
+        break;
+      }
     }
   }
 
@@ -322,7 +328,9 @@ Future<void> runApp(List<String> args) async {
 
         if (!result.isValid) {
           globalAnyFailed = true;
-          if (fastFail) break;
+          if (fastFail) {
+            break;
+          }
         }
       }
     }
@@ -444,7 +452,9 @@ Future<void> _generateBaselineFile(ValidationResult result, String? ignoreFileOv
   for (final ValidationError error in result.validationErrors) {
     if (!error.isIgnored) {
       final key = '${error.ruleId}:${error.file}';
-      if (currentSkillSeen.contains(key)) continue;
+      if (currentSkillSeen.contains(key)) {
+        continue;
+      }
       currentSkillSeen.add(key);
 
       currentSkillIgnores.add(IgnoreEntry(

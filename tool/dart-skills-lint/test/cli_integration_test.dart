@@ -1,3 +1,7 @@
+// Copyright (c) 2026, the Dart project authors.  Please see the AUTHORS file
+// for details. All rights reserved. Use of this source code is governed by a
+// BSD-style license that can be found in the LICENSE file.
+
 import 'dart:convert';
 import 'dart:io';
 
@@ -38,8 +42,7 @@ void main() {
       expect(ignoreFile.existsSync(), isTrue);
 
       final String content = await ignoreFile.readAsString();
-      // ignore: specify_nonobvious_local_variable_types
-      final json = jsonDecode(content);
+      final json = jsonDecode(content) as Map<String, dynamic>;
       final skills = json['skills'] as Map<String, dynamic>;
       final ignores = skills['test-skill'] as List;
 
