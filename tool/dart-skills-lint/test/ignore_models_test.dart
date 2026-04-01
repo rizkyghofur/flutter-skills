@@ -1,6 +1,6 @@
-import 'package:test/test.dart';
 import 'package:dart_skills_lint/src/models/ignore_entry.dart';
 import 'package:dart_skills_lint/src/models/skills_ignores.dart';
+import 'package:test/test.dart';
 
 void main() {
   group('IgnoreEntry Serialization', () {
@@ -17,7 +17,7 @@ void main() {
 
     test('toJson serializes rule_id and file_name', () {
       final entry = IgnoreEntry(ruleId: 'description_too_long', fileName: 'SKILL.md');
-      final json = entry.toJson();
+      final Map<String, dynamic> json = entry.toJson();
       expect(json['rule_id'], equals('description_too_long'));
       expect(json['file_name'], equals('SKILL.md'));
       expect(json.containsKey('used'), isFalse); // Suppressed
@@ -42,7 +42,7 @@ void main() {
     test('toJson serializes nested skills map', () {
       final entry = IgnoreEntry(ruleId: 'rule1', fileName: 'file1.md');
       final ignores = SkillsIgnores(skills: {'skill-a': [entry]});
-      final json = ignores.toJson();
+      final Map<String, dynamic> json = ignores.toJson();
       
       expect(json.containsKey('skills'), isTrue);
       final skillsJson = json['skills'] as Map<String, dynamic>;

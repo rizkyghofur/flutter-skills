@@ -1,6 +1,7 @@
 import 'dart:io';
-import 'package:test/test.dart';
+
 import 'package:dart_skills_lint/src/validator.dart';
+import 'package:test/test.dart';
 
 void main() {
   group('Directory Structure Validation', () {
@@ -19,7 +20,7 @@ void main() {
     test('fails if directory does not exist', () async {
       final nonExistentDir = Directory('path/to/nothing');
       final validator = Validator();
-      final result = await validator.validate(nonExistentDir);
+      final ValidationResult result = await validator.validate(nonExistentDir);
 
       expect(result.isValid, isFalse);
       expect(result.errors, contains(contains('Directory does not exist')));
@@ -29,7 +30,7 @@ void main() {
       final file = File('${tempDir.path}/some_file');
       await file.create();
       final validator = Validator();
-      final result = await validator.validate(Directory(file.path));
+      final ValidationResult result = await validator.validate(Directory(file.path));
 
       expect(result.isValid, isFalse);
       expect(result.errors, contains(contains('is not a directory')));
@@ -37,7 +38,7 @@ void main() {
 
     test('fails if SKILL.md is missing', () async {
       final validator = Validator();
-      final result = await validator.validate(tempDir);
+      final ValidationResult result = await validator.validate(tempDir);
 
       expect(result.isValid, isFalse);
       expect(result.errors, contains(contains('SKILL.md is missing')));
@@ -46,14 +47,15 @@ void main() {
     test('passes if directory exists and contains SKILL.md', () async {
       final skillDir = Directory('${tempDir.path}/test-skill');
       await skillDir.create();
-      await File('${skillDir.path}/SKILL.md').writeAsString('''---
+      await File('${skillDir.path}/SKILL.md').writeAsString('''
+---
 name: test-skill
 description: A test skill
 ---
 Body''');
 
       final validator = Validator();
-      final result = await validator.validate(skillDir);
+      final ValidationResult result = await validator.validate(skillDir);
 
       expect(result.isValid, isTrue,
           reason: result.errors.isEmpty ? '' : result.errors.first);

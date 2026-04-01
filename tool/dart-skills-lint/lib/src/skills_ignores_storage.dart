@@ -15,7 +15,7 @@ class SkillsIgnoresStorage {
     }
 
     try {
-      final content = await file.readAsString();
+      final String content = await file.readAsString();
       final json = jsonDecode(content) as Map<String, dynamic>;
       return SkillsIgnores.fromJson(json);
     } catch (_) {
@@ -26,7 +26,7 @@ class SkillsIgnoresStorage {
   /// Saves `SkillsIgnores` to the specified path.
   Future<void> save(String path, SkillsIgnores ignores) async {
     final file = File(path);
-    final jsonString = JsonEncoder.withIndent('  ').convert(ignores.toJson());
+    final String jsonString = const JsonEncoder.withIndent('  ').convert(ignores.toJson());
     await file.writeAsString(jsonString);
   }
 }

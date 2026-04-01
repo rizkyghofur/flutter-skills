@@ -1,16 +1,19 @@
-import 'dart:io';
 import 'dart:convert';
-import 'package:args/args.dart';
-import 'package:path/path.dart' as p;
-import 'package:dart_skills_lint/src/validator.dart';
-import 'package:meta/meta.dart';
-import 'package:logging/logging.dart';
+import 'dart:io';
 
-import 'models/check_type.dart';
-import 'rules.dart';
+import 'package:args/args.dart';
+import 'package:logging/logging.dart';
+import 'package:meta/meta.dart';
+import 'package:path/path.dart' as p;
+
 import 'config_parser.dart';
+import 'models/check_type.dart';
 import 'models/ignore_entry.dart';
+import 'models/skills_ignores.dart';
+import 'models/validation_error.dart';
+import 'rules.dart';
 import 'skills_ignores_storage.dart';
+import 'validator.dart';
 
 final _log = Logger('dart_skills_lint');
 
@@ -60,27 +63,19 @@ Future<void> runApp(List<String> args) async {
         abbr: 'h', negatable: false, help: 'Show usage information.')
     ..addFlag(_printWarningsFlag,
         abbr: 'w',
-        negatable: true,
         defaultsTo: true,
         help: 'Print validation warnings.')
     ..addFlag(relativePathsCheck.name,
-        negatable: true,
-        defaultsTo: false,
         help: 'Check if relative paths exist.')
     ..addFlag(disallowedFieldCheck.name,
-        negatable: true,
-        defaultsTo: false,
         help: 'Check for disallowed fields in YAML metadata.')
     ..addFlag(validYamlMetadataCheck.name,
-        negatable: true,
         defaultsTo: true,
         help: 'Check if YAML metadata is valid.')
     ..addFlag(descriptionTooLongCheck.name,
-        negatable: true,
         defaultsTo: true,
         help: 'Check if description is too long.')
     ..addFlag(invalidSkillNameCheck.name,
-        negatable: true,
         defaultsTo: true,
         help: 'Check if skill name is invalid.')
     ..addFlag(_fastFailFlag,
@@ -89,7 +84,6 @@ Future<void> runApp(List<String> args) async {
     ..addFlag(_quietFlag,
         abbr: 'q',
         negatable: false,
-        defaultsTo: false,
         help: 'Quiet mode (only print errors and warnings).')
     ..addMultiOption(_skillsDirectoryFlag,
         abbr: 'd',
@@ -119,7 +113,7 @@ Future<void> runApp(List<String> args) async {
     return;
   }
 
-  final checkTypes = {
+  final Set<CheckType> checkTypes = {
     relativePathsCheck,
     absolutePathsCheck,
     disallowedFieldCheck,
@@ -128,9 +122,9 @@ Future<void> runApp(List<String> args) async {
     invalidSkillNameCheck,
   };
   final ignoreConfig = results[_ignoreConfigFlag] as bool;
-  final config = ignoreConfig ? Configuration() : await loadConfig(checkTypes);
+  final Configuration config = ignoreConfig ? Configuration() : await loadConfig(checkTypes);
   if (ignoreConfig && !(results[_quietFlag] as bool)) {
-    _log.info("Ignoring configuration file due to $_ignoreConfigFlag flag");
+    _log.info('Ignoring configuration file due to $_ignoreConfigFlag flag');
   }
 
   var skillDirPaths = results[_skillsDirectoryFlag] as List<String>;
@@ -188,19 +182,19 @@ Future<void> runApp(List<String> args) async {
         : AnalysisSeverity.disabled;
   }
 
-  final relativePathsSeverity = relativePathsCheck.severity;
-  final absolutePathsSeverity = absolutePathsCheck.severity;
+  final AnalysisSeverity relativePathsSeverity = relativePathsCheck.severity;
+  final AnalysisSeverity absolutePathsSeverity = absolutePathsCheck.severity;
 
   final printWarnings = results[_printWarningsFlag] as bool;
   final fastFail = results[_fastFailFlag] as bool;
   final quiet = results[_quietFlag] as bool;
 
-  bool globalAnyFailed = false;
-  bool anySkillsValidated = false;
+  var globalAnyFailed = false;
+  var anySkillsValidated = false;
 
   // 1. Process individual --skill (-s) paths
   for (final skillPath in individualSkillPaths) {
-    final normalizedSkillPath = p.normalize(_expandPath(skillPath));
+    final String normalizedSkillPath = p.normalize(_expandPath(skillPath));
     if (!quiet) {
       _log.info('$evaluatingDirMsg $normalizedSkillPath');
     }
@@ -216,8 +210,8 @@ Future<void> runApp(List<String> args) async {
     var localAbsoluteSeverity = absolutePathsSeverity;
     String? localIgnoreFile;
 
-    for (final dirConfig in config.directoryConfigs) {
-      final normalizedConfigPath = p.normalize(dirConfig.path);
+    for (final DirectoryConfig dirConfig in config.directoryConfigs) {
+      final String normalizedConfigPath = p.normalize(dirConfig.path);
       if (normalizedSkillPath.startsWith(normalizedConfigPath)) {
         if (dirConfig.rules.containsKey('check-relative-paths')) {
           localRelativeSeverity = dirConfig.rules['check-relative-paths']!;
@@ -234,18 +228,18 @@ Future<void> runApp(List<String> args) async {
       localIgnoreFile = results[_ignoreFileOption] as String?;
     }
 
-    final Set<CheckType> localRules = {
+    final localRules = <CheckType>{
       CheckType(name: relativePathsCheck.name, defaultSeverity: localRelativeSeverity),
       CheckType(name: absolutePathsCheck.name, defaultSeverity: localAbsoluteSeverity),
     };
     final validator = Validator(rules: localRules);
 
-    final ignoresMap = await _loadIgnores(localIgnoreFile, skillDir.parent);
-    final skillName = p.basename(skillDir.path);
-    final skillIgnores = ignoresMap[skillName] ?? [];
+    final Map<String, List<IgnoreEntry>> ignoresMap = await _loadIgnores(localIgnoreFile, skillDir.parent);
+    final String skillName = p.basename(skillDir.path);
+    final List<IgnoreEntry> skillIgnores = ignoresMap[skillName] ?? [];
 
     anySkillsValidated = true;
-    final result = await _validateSingleSkill(
+    final ValidationResult result = await _validateSingleSkill(
       skillDir: skillDir,
       validator: validator,
       ignoresMap: ignoresMap,
@@ -258,10 +252,10 @@ Future<void> runApp(List<String> args) async {
     }
 
     if (!results.wasParsed(_generateBaselineFlag)) {
-      final fullPath = p.absolute(skillDir.path);
+      final String fullPath = p.absolute(skillDir.path);
       for (final ignore in skillIgnores) {
         if (!ignore.used) {
-          _log.info('Stale ignore entry found for rule \'${ignore.ruleId}\' in skill \'$skillName\' at \'$fullPath\'. Consider removing it.');
+          _log.info("Stale ignore entry found for rule '${ignore.ruleId}' in skill '$skillName' at '$fullPath'. Consider removing it.");
         }
       }
     }
@@ -274,7 +268,7 @@ Future<void> runApp(List<String> args) async {
 
   // 2. Process --skills-directory (-d) roots
   for (final rootPath in skillDirPaths) {
-    final normalizedRootPath = p.normalize(_expandPath(rootPath));
+    final String normalizedRootPath = p.normalize(_expandPath(rootPath));
     if (!quiet) {
       _log.info('$evaluatingDirMsg $normalizedRootPath');
     }
@@ -290,8 +284,8 @@ Future<void> runApp(List<String> args) async {
     var localAbsoluteSeverity = absolutePathsSeverity;
     String? localIgnoreFile;
 
-    for (final dirConfig in config.directoryConfigs) {
-      final normalizedConfigPath = p.normalize(dirConfig.path);
+    for (final DirectoryConfig dirConfig in config.directoryConfigs) {
+      final String normalizedConfigPath = p.normalize(dirConfig.path);
       if (normalizedRootPath.startsWith(normalizedConfigPath)) {
         if (dirConfig.rules.containsKey('check-relative-paths')) {
           localRelativeSeverity = dirConfig.rules['check-relative-paths']!;
@@ -308,7 +302,7 @@ Future<void> runApp(List<String> args) async {
       localIgnoreFile = results[_ignoreFileOption] as String?;
     }
 
-    final Set<CheckType> localRules = {
+    final localRules = <CheckType>{
       CheckType(name: relativePathsCheck.name, defaultSeverity: localRelativeSeverity),
       CheckType(name: absolutePathsCheck.name, defaultSeverity: localAbsoluteSeverity),
     };
@@ -325,12 +319,12 @@ Future<void> runApp(List<String> args) async {
     }
     entities.sort((a, b) => a.path.compareTo(b.path));
 
-    final ignoresMap = await _loadIgnores(localIgnoreFile, rootDir);
+    final Map<String, List<IgnoreEntry>> ignoresMap = await _loadIgnores(localIgnoreFile, rootDir);
     
     for (final entity in entities) {
       if (entity is Directory) {
         anySkillsValidated = true;
-        final result = await _validateSingleSkill(
+        final ValidationResult result = await _validateSingleSkill(
           skillDir: entity,
           validator: validator,
           ignoresMap: ignoresMap,
@@ -350,12 +344,12 @@ Future<void> runApp(List<String> args) async {
     }
 
     if (!results.wasParsed(_generateBaselineFlag)) {
-      for (final entry in ignoresMap.entries) {
-        final skillName = entry.key;
-        for (final ignore in entry.value) {
+      for (final MapEntry<String, List<IgnoreEntry>> entry in ignoresMap.entries) {
+        final String skillName = entry.key;
+        for (final IgnoreEntry ignore in entry.value) {
           if (!ignore.used) {
-            final fullPath = p.absolute(p.join(rootDir.path, skillName));
-            _log.info('Stale ignore entry found for rule \'${ignore.ruleId}\' in skill \'$skillName\' at \'$fullPath\'. Consider removing it.');
+            final String fullPath = p.absolute(p.join(rootDir.path, skillName));
+            _log.info("Stale ignore entry found for rule '${ignore.ruleId}' in skill '$skillName' at '$fullPath'. Consider removing it.");
           }
         }
       }
@@ -367,9 +361,9 @@ Future<void> runApp(List<String> args) async {
   }
 
   if (!anySkillsValidated) {
-    bool foundSingleSkillPassedToD = false;
+    var foundSingleSkillPassedToD = false;
     for (final rootPath in skillDirPaths) {
-      final expandedRootPath = _expandPath(rootPath);
+      final String expandedRootPath = _expandPath(rootPath);
       final skillMdFile = File(p.join(expandedRootPath, 'SKILL.md'));
       if (await skillMdFile.exists()) {
         _log.severe('Directory "$expandedRootPath" appears to be an individual skill. Use --skill / -s instead of -d / --skills-directory.');
@@ -390,7 +384,7 @@ Future<void> runApp(List<String> args) async {
 }
 
 Future<Map<String, List<IgnoreEntry>>> _loadIgnores(String? ignoreFileOverride, Directory rootDir) async {
-  final ignorePath = ignoreFileOverride != null ? p.normalize(_expandPath(ignoreFileOverride)) : p.join(rootDir.path, defaultIgnoreFileName);
+  final String ignorePath = ignoreFileOverride != null ? p.normalize(_expandPath(ignoreFileOverride)) : p.join(rootDir.path, defaultIgnoreFileName);
   final file = File(ignorePath);
   if (!await file.exists()) {
     if (ignoreFileOverride != null) {
@@ -405,14 +399,14 @@ Future<Map<String, List<IgnoreEntry>>> _loadIgnores(String? ignoreFileOverride, 
   }
 
   final storage = SkillsIgnoresStorage();
-  final ignores = await storage.load(ignorePath);
+  final SkillsIgnores ignores = await storage.load(ignorePath);
   return ignores.skills;
 }
 
 void _applyIgnores(ValidationResult result, List<IgnoreEntry> ignores, Directory skillDir) {
-  for (final error in result.validationErrors) {
+  for (final ValidationError error in result.validationErrors) {
     if (error.isIgnored) continue;
-    final fileName = error.file;
+    final String fileName = error.file;
     for (final ignore in ignores) {
       if (ignore.ruleId == error.ruleId && ignore.fileName == fileName) {
         error.isIgnored = true;
@@ -430,30 +424,30 @@ Future<ValidationResult> _validateSingleSkill({
   required bool printWarnings,
   required bool quiet,
 }) async {
-  final skillName = p.basename(skillDir.path);
+  final String skillName = p.basename(skillDir.path);
   if (!quiet) {
     _log.info('--- Validating skill: $skillName ---');
   }
-  final result = await validator.validate(skillDir);
-  final skillIgnores = ignoresMap[skillName] ?? [];
+  final ValidationResult result = await validator.validate(skillDir);
+  final List<IgnoreEntry> skillIgnores = ignoresMap[skillName] ?? [];
   _applyIgnores(result, skillIgnores, skillDir);
   _printValidationResult(result, printWarnings, quiet);
   return result;
 }
 
 Future<void> _generateBaselineFile(ValidationResult result, String? ignoreFileOverride, Directory rootDir, Directory skillDir) async {
-  final ignorePath = ignoreFileOverride != null ? p.normalize(_expandPath(ignoreFileOverride)) : p.join(rootDir.path, defaultIgnoreFileName);
+  final String ignorePath = ignoreFileOverride != null ? p.normalize(_expandPath(ignoreFileOverride)) : p.join(rootDir.path, defaultIgnoreFileName);
   final storage = SkillsIgnoresStorage();
-  final ignores = await storage.load(ignorePath);
+  final SkillsIgnores ignores = await storage.load(ignorePath);
 
-  final skillName = p.basename(skillDir.path);
-  final currentSkillIgnores = ignores.skills[skillName] ?? [];
+  final String skillName = p.basename(skillDir.path);
+  final List<IgnoreEntry> currentSkillIgnores = ignores.skills[skillName] ?? [];
   final currentSkillSeen = <String>{};
   for (final ignore in currentSkillIgnores) {
     currentSkillSeen.add('${ignore.ruleId}:${ignore.fileName}');
   }
 
-  for (final error in result.validationErrors) {
+  for (final ValidationError error in result.validationErrors) {
     if (!error.isIgnored) {
       final key = '${error.ruleId}:${error.file}';
       if (currentSkillSeen.contains(key)) continue;
@@ -495,14 +489,14 @@ void _printValidationResult(
     }
   } else {
     _log.severe('  $skillIsInvalidMsg');
-    for (final error in result.errors) {
+    for (final String error in result.errors) {
       _log.severe('    - $error');
     }
   }
 
   if (printWarnings && result.warnings.isNotEmpty) {
     _log.warning('  $warningsMsg');
-    for (final warning in result.warnings) {
+    for (final String warning in result.warnings) {
       _log.warning('    - $warning');
     }
   }
@@ -510,7 +504,7 @@ void _printValidationResult(
 
 String _expandPath(String path) {
   if (path.startsWith('~/')) {
-    final homeDir = Platform.environment['HOME'] ?? Platform.environment['USERPROFILE'];
+    final String? homeDir = Platform.environment['HOME'] ?? Platform.environment['USERPROFILE'];
     if (homeDir != null) {
       return p.join(homeDir, path.substring(2));
     }

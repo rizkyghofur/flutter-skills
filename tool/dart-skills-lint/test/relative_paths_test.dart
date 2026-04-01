@@ -1,7 +1,8 @@
 import 'dart:io';
-import 'package:test/test.dart';
-import 'package:dart_skills_lint/src/validator.dart';
+
 import 'package:dart_skills_lint/src/models/check_type.dart';
+import 'package:dart_skills_lint/src/validator.dart';
+import 'package:test/test.dart';
 
 void main() {
   group('Relative Paths Validation', () {
@@ -18,21 +19,22 @@ void main() {
     });
 
     test('passes with valid relative file path (existing file)', () async {
-      final skillDir = await Directory('${tempDir.path}/test-skill').create();
-      await File('${skillDir.path}/SKILL.md').writeAsString('''---
+      final Directory skillDir = await Directory('${tempDir.path}/test-skill').create();
+      await File('${skillDir.path}/SKILL.md').writeAsString('''
+---
 name: test-skill
 description: A test skill
 ---
 [Link to a reference](references/DETAILS.md)
 ''');
 
-      final refDir = await Directory('${skillDir.path}/references').create();
+      final Directory refDir = await Directory('${skillDir.path}/references').create();
       await File('${refDir.path}/DETAILS.md').writeAsString('Details here');
 
       final validator = Validator(rules: {
         CheckType(name: 'check-relative-paths', defaultSeverity: AnalysisSeverity.warning)
       });
-      final result = await validator.validate(skillDir);
+      final ValidationResult result = await validator.validate(skillDir);
 
       expect(result.isValid, isTrue);
       expect(result.errors, isEmpty);
@@ -40,8 +42,9 @@ description: A test skill
     });
 
     test('warns with missing relative file path', () async {
-      final skillDir = await Directory('${tempDir.path}/test-skill').create();
-      await File('${skillDir.path}/SKILL.md').writeAsString('''---
+      final Directory skillDir = await Directory('${tempDir.path}/test-skill').create();
+      await File('${skillDir.path}/SKILL.md').writeAsString('''
+---
 name: test-skill
 description: A test skill
 ---
@@ -51,15 +54,16 @@ description: A test skill
       final validator = Validator(rules: {
         CheckType(name: 'check-relative-paths', defaultSeverity: AnalysisSeverity.warning)
       });
-      final result = await validator.validate(skillDir);
+      final ValidationResult result = await validator.validate(skillDir);
 
       expect(result.isValid, isTrue);
       expect(result.warnings, contains(contains('Linked file does not exist')));
     });
 
     test('fails with absolute file path', () async {
-      final skillDir = await Directory('${tempDir.path}/test-skill').create();
-      await File('${skillDir.path}/SKILL.md').writeAsString('''---
+      final Directory skillDir = await Directory('${tempDir.path}/test-skill').create();
+      await File('${skillDir.path}/SKILL.md').writeAsString('''
+---
 name: test-skill
 description: A test skill
 ---
@@ -69,7 +73,7 @@ description: A test skill
       final validator = Validator(rules: {
         CheckType(name: 'check-relative-paths', defaultSeverity: AnalysisSeverity.warning)
       });
-      final result = await validator.validate(skillDir);
+      final ValidationResult result = await validator.validate(skillDir);
 
       expect(result.isValid, isFalse);
       expect(
@@ -78,8 +82,9 @@ description: A test skill
 
     test('ignores web URLs, emails, javascript, data URIs, and anchors',
         () async {
-      final skillDir = await Directory('${tempDir.path}/test-skill').create();
-      await File('${skillDir.path}/SKILL.md').writeAsString('''---
+      final Directory skillDir = await Directory('${tempDir.path}/test-skill').create();
+      await File('${skillDir.path}/SKILL.md').writeAsString('''
+---
 name: test-skill
 description: A test skill
 ---
@@ -94,7 +99,7 @@ description: A test skill
       final validator = Validator(rules: {
         CheckType(name: 'check-relative-paths', defaultSeverity: AnalysisSeverity.warning)
       });
-      final result = await validator.validate(skillDir);
+      final ValidationResult result = await validator.validate(skillDir);
 
       expect(result.isValid, isTrue);
       expect(result.errors, isEmpty);

@@ -1,14 +1,20 @@
 import 'dart:io';
+
 import 'package:meta/meta.dart';
 import 'package:path/path.dart' as p;
 import 'package:yaml/yaml.dart';
-import 'models/check_type.dart';
-import 'rules.dart';
 
+import 'models/check_type.dart';
 import 'models/validation_error.dart';
+import 'rules.dart';
 
 /// The result of a skill directory validation attempt.
 class ValidationResult {
+
+  ValidationResult({
+    this.validationErrors = const [],
+    List<String> warnings = const [],
+  }) : _manualWarnings = warnings;
   /// Whether the skill directory is valid according to the specification.
   bool get isValid => !validationErrors.any((e) => e.severity == AnalysisSeverity.error && !e.isIgnored);
 
@@ -26,21 +32,16 @@ class ValidationResult {
         ..._manualWarnings,
         ...validationErrors.where((e) => e.severity == AnalysisSeverity.warning && !e.isIgnored).map((e) => e.message),
       ];
-
-  ValidationResult({
-    this.validationErrors = const [],
-    List<String> warnings = const [],
-  }) : _manualWarnings = warnings;
 }
 
 /// Validates agent skill directories against the Agent Skills specification.
 class Validator {
-  static const _skillFileName = 'SKILL.md';
-
-  final Map<String, CheckType> _ruleOverrides;
 
   Validator({Set<CheckType>? rules})
       : _ruleOverrides = rules != null ? {for (var r in rules) r.name: r} : {};
+  static const _skillFileName = 'SKILL.md';
+
+  final Map<String, CheckType> _ruleOverrides;
 
   CheckType _getRule(CheckType defaultRule) {
     return _ruleOverrides[defaultRule.name] ?? defaultRule;
@@ -69,7 +70,7 @@ class Validator {
   static const _versionField = 'version';
   static const _evalTaskField = 'eval_task';
 
-  static const _allowedFields = {
+  static const Set<String> _allowedFields = {
     _nameField,
     _descriptionField,
     _licenseField,
@@ -82,7 +83,7 @@ class Validator {
     _evalTaskField,
   };
 
-  static const _requiredFields = {
+  static const Set<String> _requiredFields = {
     _nameField,
     _descriptionField,
   };
@@ -111,15 +112,15 @@ class Validator {
     final validationErrors = <ValidationError>[];
     final warnings = <String>[];
 
-    final isValidDir = await _checkDirectoryStructure(dir, validationErrors);
+    final bool isValidDir = await _checkDirectoryStructure(dir, validationErrors);
     if (!isValidDir) {
       return ValidationResult(
           validationErrors: validationErrors, warnings: warnings);
     }
 
     final skillMdFile = File(p.join(dir.path, _skillFileName));
-    final content = await skillMdFile.readAsString();
-    final match = _skillStartRegex.firstMatch(content);
+    final String content = await skillMdFile.readAsString();
+    final RegExpMatch? match = _skillStartRegex.firstMatch(content);
 
     if (match == null) {
       validationErrors.add(ValidationError(
@@ -128,15 +129,15 @@ class Validator {
           file: _skillFileName,
           message: 'Missing YAML metadata in $_skillFileName$_metadataUrl'));
     } else {
-      final yamlStr = match.group(1)!;
+      final String yamlStr = match.group(1)!;
       _parseMetadataFields(yamlStr, dir, validationErrors, warnings);
 
-      final relativePathsSeverity = _getRule(relativePathsCheck).severity;
-      final absolutePathsSeverity = _getRule(absolutePathsCheck).severity;
+      final AnalysisSeverity relativePathsSeverity = _getRule(relativePathsCheck).severity;
+      final AnalysisSeverity absolutePathsSeverity = _getRule(absolutePathsCheck).severity;
 
       if (relativePathsSeverity != AnalysisSeverity.disabled ||
           absolutePathsSeverity != AnalysisSeverity.disabled) {
-        final restOfContent = content.substring(match.end);
+        final String restOfContent = content.substring(match.end);
         await _validateRelativeLinks(restOfContent, dir, validationErrors, warnings);
       }
     }
@@ -191,7 +192,7 @@ class Validator {
         return;
       }
 
-      for (final field in _requiredFields) {
+      for (final String field in _requiredFields) {
         if (!yaml.containsKey(field)) {
           validationErrors.add(ValidationError(
               ruleId: validYamlMetadataCheck.name,
@@ -213,12 +214,12 @@ class Validator {
         }
       }
 
-      final name = yaml[_nameField]?.toString() ?? '';
+      final String name = yaml[_nameField]?.toString() ?? '';
       if (name.isNotEmpty) {
         _validateNameField(name, dir, validationErrors);
       }
 
-      final description = yaml[_descriptionField]?.toString() ?? '';
+      final String description = yaml[_descriptionField]?.toString() ?? '';
       if (description.length > maxDescriptionLength) {
         validationErrors.add(ValidationError(
             ruleId: _getRule(descriptionTooLongCheck).name,
@@ -228,7 +229,7 @@ class Validator {
       }
 
       if (yaml.containsKey(_compatibilityField)) {
-        final compatibility = yaml[_compatibilityField]?.toString() ?? '';
+        final String compatibility = yaml[_compatibilityField]?.toString() ?? '';
         if (compatibility.length > maxCompatibilityLength) {
           validationErrors.add(ValidationError(
               ruleId: _getRule(validYamlMetadataCheck).name,
@@ -283,7 +284,7 @@ class Validator {
           severity: _getRule(invalidSkillNameCheck).severity));
     }
 
-    final dirName = p.basename(dir.path);
+    final String dirName = p.basename(dir.path);
     if (name != dirName) {
       validationErrors.add(ValidationError(
           ruleId: _getRule(invalidSkillNameCheck).name,
@@ -295,10 +296,10 @@ class Validator {
 
   Future<void> _validateRelativeLinks(String markdownContent, Directory dir,
       List<ValidationError> validationErrors, List<String> warnings) async {
-    for (final linkMatch in _markdownLinkRegex.allMatches(markdownContent)) {
-      final path = linkMatch.group(1)!;
+    for (final RegExpMatch linkMatch in _markdownLinkRegex.allMatches(markdownContent)) {
+      final String path = linkMatch.group(1)!;
       if (p.isAbsolute(path) || p.windows.isAbsolute(path)) {
-        final absolutePathsSeverity = _getRule(absolutePathsCheck).severity;
+        final AnalysisSeverity absolutePathsSeverity = _getRule(absolutePathsCheck).severity;
         if (absolutePathsSeverity != AnalysisSeverity.disabled) {
           validationErrors.add(ValidationError(
               ruleId: _getRule(absolutePathsCheck).name,
@@ -310,7 +311,7 @@ class Validator {
       }
 
       try {
-        final uri = Uri.parse(path);
+        final Uri uri = Uri.parse(path);
         if (uri.hasScheme || path.startsWith('#')) {
           continue; // Ignore web URLs, email links, anchors, etc.
         }
@@ -319,7 +320,7 @@ class Validator {
       }
 
       final linkedFile = File(p.join(dir.path, path));
-      final relativePathsSeverity = _getRule(relativePathsCheck).severity;
+      final AnalysisSeverity relativePathsSeverity = _getRule(relativePathsCheck).severity;
       if (!await linkedFile.exists()) {
         if (relativePathsSeverity != AnalysisSeverity.disabled) {
           validationErrors.add(ValidationError(

@@ -5,6 +5,15 @@ part 'ignore_entry.g.dart';
 /// Represents a single ignored rule entry for a specific file.
 @JsonSerializable()
 class IgnoreEntry {
+
+  IgnoreEntry({
+    required this.ruleId,
+    required this.fileName,
+    this.used = false,
+  });
+
+  /// Creates an IgnoreEntry from a JSON map.
+  factory IgnoreEntry.fromJson(Map<String, dynamic> json) => _$IgnoreEntryFromJson(json);
   /// The rule ID that should be suppressed (e.g., 'description_too_long').
   @JsonKey(name: 'rule_id')
   final String ruleId;
@@ -16,15 +25,6 @@ class IgnoreEntry {
   /// Whether this entry has been used during the run.
   @JsonKey(includeFromJson: false, includeToJson: false)
   bool used;
-
-  IgnoreEntry({
-    required this.ruleId,
-    required this.fileName,
-    this.used = false,
-  });
-
-  /// Creates an IgnoreEntry from a JSON map.
-  factory IgnoreEntry.fromJson(Map<String, dynamic> json) => _$IgnoreEntryFromJson(json);
 
   /// Converts an IgnoreEntry to a JSON map.
   Map<String, dynamic> toJson() => _$IgnoreEntryToJson(this);

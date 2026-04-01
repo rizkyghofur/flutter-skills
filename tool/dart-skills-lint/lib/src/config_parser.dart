@@ -20,18 +20,18 @@ AnalysisSeverity _parseSeverity(String value) {
 
 /// Configuration for a specific directory.
 class DirectoryConfig {
+
+  DirectoryConfig({required this.path, required this.rules, this.ignoreFile});
   final String path;
   final Map<String, AnalysisSeverity> rules;
   final String? ignoreFile;
-
-  DirectoryConfig({required this.path, required this.rules, this.ignoreFile});
 }
 
 /// Structured configuration for the linter.
 class Configuration {
-  final List<DirectoryConfig> directoryConfigs;
 
   Configuration({this.directoryConfigs = const []});
+  final List<DirectoryConfig> directoryConfigs;
 }
 
 /// Reads dart_skills_lint.yaml from the current directory and updates the check types.
@@ -40,7 +40,7 @@ Future<Configuration> loadConfig(Set<CheckType> checkTypes) async {
   if (!await configFile.exists()) return Configuration();
 
   try {
-    final content = await configFile.readAsString();
+    final String content = await configFile.readAsString();
     final yaml = loadYaml(content);
     if (yaml is YamlMap && yaml.containsKey(_dartSkillsLintKey)) {
       final toolConfig = yaml[_dartSkillsLintKey];

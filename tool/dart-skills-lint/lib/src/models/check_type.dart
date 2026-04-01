@@ -12,6 +12,11 @@ enum AnalysisSeverity {
 
 /// Encapsulates metadata and severity state for a specific validation rule.
 class CheckType {
+
+  CheckType({
+    required this.name,
+    required this.defaultSeverity,
+  }) : severity = defaultSeverity;
   final String name;
 
   /// The default severity if not overridden by config or flags.
@@ -19,9 +24,4 @@ class CheckType {
 
   /// The current resolved severity for this run.
   AnalysisSeverity severity;
-
-  CheckType({
-    required this.name,
-    required this.defaultSeverity,
-  }) : severity = defaultSeverity;
 }

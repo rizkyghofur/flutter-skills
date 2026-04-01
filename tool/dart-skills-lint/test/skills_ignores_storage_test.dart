@@ -1,7 +1,8 @@
 import 'dart:io';
-import 'package:test/test.dart';
-import 'package:dart_skills_lint/src/skills_ignores_storage.dart';
+
 import 'package:dart_skills_lint/src/models/skills_ignores.dart';
+import 'package:dart_skills_lint/src/skills_ignores_storage.dart';
+import 'package:test/test.dart';
 
 void main() {
   late Directory tempDir;
@@ -21,7 +22,7 @@ void main() {
       final file = File('${tempDir.path}/empty.json');
       await file.writeAsString('{}');
       
-      final ignores = await storage.load(file.path);
+      final SkillsIgnores ignores = await storage.load(file.path);
       expect(ignores.skills.isEmpty, isTrue);
     });
 
@@ -37,7 +38,7 @@ void main() {
 }
 ''');
       
-      final ignores = await storage.load(file.path);
+      final SkillsIgnores ignores = await storage.load(file.path);
       expect(ignores.skills.containsKey('skill-a'), isTrue);
       expect(ignores.skills['skill-a']!.length, equals(1));
     });
@@ -55,7 +56,7 @@ void main() {
 }
 ''');
       
-      final ignores = await storage.load(file.path);
+      final SkillsIgnores ignores = await storage.load(file.path);
       expect(ignores.skills.containsKey('skill-a'), isTrue);
       expect(ignores.skills['skill-a']!.length, equals(2));
     });
@@ -72,7 +73,7 @@ void main() {
 }
 ''');
       
-      final ignores = await storage.load(file.path);
+      final SkillsIgnores ignores = await storage.load(file.path);
       expect(ignores.skills.containsKey('skill-a'), isTrue);
       expect(ignores.skills.containsKey('skill-b'), isTrue);
       expect(ignores.skills.containsKey('skill-c'), isTrue);

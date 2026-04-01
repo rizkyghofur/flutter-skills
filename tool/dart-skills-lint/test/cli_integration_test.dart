@@ -1,9 +1,10 @@
 import 'dart:convert';
 import 'dart:io';
+
+import 'package:dart_skills_lint/src/entry_point.dart';
+import 'package:path/path.dart' as p;
 import 'package:test/test.dart';
 import 'package:test_process/test_process.dart';
-import 'package:path/path.dart' as p;
-import 'package:dart_skills_lint/src/entry_point.dart';
 
 void main() {
   group('CLI Integration', () {
@@ -20,8 +21,9 @@ void main() {
     });
 
     test('de-duplicates baseline entries for multiple identical rule failures', () async {
-      final skillDir = await Directory('${tempDir.path}/test-skill').create();
-      await File('${skillDir.path}/SKILL.md').writeAsString('''---
+      final Directory skillDir = await Directory('${tempDir.path}/test-skill').create();
+      await File('${skillDir.path}/SKILL.md').writeAsString('''
+---
 name: test-skill
 description: A test skill
 ---
@@ -30,7 +32,7 @@ description: A test skill
 ''');
 
       // Run with --generate-baseline
-      final process = await TestProcess.start(
+      final TestProcess process = await TestProcess.start(
         'dart',
         ['bin/dart_skills_lint.dart', '-s', skillDir.path, '--generate-baseline'],
       );
@@ -39,7 +41,7 @@ description: A test skill
       final ignoreFile = File('${skillDir.path}/$defaultIgnoreFileName');
       expect(await ignoreFile.exists(), isTrue);
 
-      final content = await ignoreFile.readAsString();
+      final String content = await ignoreFile.readAsString();
       final json = jsonDecode(content);
       final skills = json['skills'] as Map<String, dynamic>;
       final ignores = skills['test-skill'] as List;
@@ -49,11 +51,12 @@ description: A test skill
     });
 
     test('cross-skill baseline de-duplicates and suppresses all errors across different skills', () async {
-      final skillsDir = await Directory('${tempDir.path}/skills').create();
+      final Directory skillsDir = await Directory('${tempDir.path}/skills').create();
       
       // Create skill-one with a broken link
-      final skill1Dir = await Directory('${skillsDir.path}/skill-one').create();
-      await File('${skill1Dir.path}/SKILL.md').writeAsString('''---
+      final Directory skill1Dir = await Directory('${skillsDir.path}/skill-one').create();
+      await File('${skill1Dir.path}/SKILL.md').writeAsString('''
+---
 name: skill-one
 description: Skill one with a broken link
 ---
@@ -61,8 +64,9 @@ description: Skill one with a broken link
 ''');
 
       // Create skill-two with a broken link
-      final skill2Dir = await Directory('${skillsDir.path}/skill-two').create();
-      await File('${skill2Dir.path}/SKILL.md').writeAsString('''---
+      final Directory skill2Dir = await Directory('${skillsDir.path}/skill-two').create();
+      await File('${skill2Dir.path}/SKILL.md').writeAsString('''
+---
 name: skill-two
 description: Skill two with a broken link
 ---
@@ -80,7 +84,7 @@ dart_skills_lint:
 ''');
 
       // 1. Run with --generate-baseline. It should evaluate all skills and write both to the baseline!
-      final genProcess = await TestProcess.start(
+      final TestProcess genProcess = await TestProcess.start(
         'dart',
         [p.normalize(p.absolute('bin/dart_skills_lint.dart')), '-d', 'skills', '--generate-baseline'],
         workingDirectory: tempDir.path,
@@ -90,7 +94,7 @@ dart_skills_lint:
       final ignoreFile = File('${tempDir.path}/$defaultIgnoreFileName');
       expect(await ignoreFile.exists(), isTrue);
 
-      final content = await ignoreFile.readAsString();
+      final String content = await ignoreFile.readAsString();
       final json = jsonDecode(content);
       final skills = json['skills'] as Map<String, dynamic>;
       
@@ -98,7 +102,7 @@ dart_skills_lint:
       expect(skills.containsKey('skill-two'), isTrue);
 
       // 2. Run again silently. It should succeed with exit 0 because all errors are ignored!
-      final runProcess = await TestProcess.start(
+      final TestProcess runProcess = await TestProcess.start(
         'dart',
         [p.normalize(p.absolute('bin/dart_skills_lint.dart')), '-d', 'skills', '-q'],
         workingDirectory: tempDir.path,
@@ -107,35 +111,36 @@ dart_skills_lint:
     });
 
     test('exits with 0 and success message for valid skill', () async {
-      final skillDir = await Directory('${tempDir.path}/valid-skill').create();
-      await File('${skillDir.path}/SKILL.md').writeAsString('''---
+      final Directory skillDir = await Directory('${tempDir.path}/valid-skill').create();
+      await File('${skillDir.path}/SKILL.md').writeAsString('''
+---
 name: valid-skill
 description: A valid skill
 ---
 Body''');
 
-      final process = await TestProcess.start(
+      final TestProcess process = await TestProcess.start(
         'dart',
         ['bin/dart_skills_lint.dart', '-s', skillDir.path],
       );
 
-      final stdout = await process.stdout.rest.toList();
+      final List<String> stdout = await process.stdout.rest.toList();
       expect(stdout.join('\n'), contains(skillIsValidMsg));
       await process.shouldExit(0);
     });
 
     test('exits with 1 and error message for invalid skill', () async {
-      final skillDir =
+      final Directory skillDir =
           await Directory('${tempDir.path}/invalid-skill').create();
       // SKILL.md is missing
 
-      final process = await TestProcess.start(
+      final TestProcess process = await TestProcess.start(
         'dart',
         ['bin/dart_skills_lint.dart', '-s', skillDir.path],
       );
 
-      final stderr = await process.stderr.rest.toList();
-      final stderrStr = stderr.join('\n');
+      final List<String> stderr = await process.stderr.rest.toList();
+      final String stderrStr = stderr.join('\n');
       expect(stderrStr, contains(skillIsInvalidMsg));
       expect(stderrStr, contains('SKILL.md is missing'));
       await process.shouldExit(1);
@@ -143,29 +148,31 @@ Body''');
 
     test('exits with 0 and validates subdirectories if named "skills"',
         () async {
-      final skillsDir = await Directory('${tempDir.path}/skills').create();
-      final skill1 = await Directory('${skillsDir.path}/skill-a').create();
-      await File('${skill1.path}/SKILL.md').writeAsString('''---
+      final Directory skillsDir = await Directory('${tempDir.path}/skills').create();
+      final Directory skill1 = await Directory('${skillsDir.path}/skill-a').create();
+      await File('${skill1.path}/SKILL.md').writeAsString('''
+---
 name: skill-a
 description: Skill A
 ---
 Body''');
 
-      final skill2 = await Directory('${skillsDir.path}/skill-b').create();
-      await File('${skill2.path}/SKILL.md').writeAsString('''---
+      final Directory skill2 = await Directory('${skillsDir.path}/skill-b').create();
+      await File('${skill2.path}/SKILL.md').writeAsString('''
+---
 name: skill-b
 description: Skill B
 ---
 Body''');
 
-      final process = await TestProcess.start(
+      final TestProcess process = await TestProcess.start(
         'dart',
         ['bin/dart_skills_lint.dart', '-d', skillsDir.path],
       );
 
       // Verify outputs for both skills (sorted order)
-      final stdout = await process.stdout.rest.toList();
-      final stdoutStr = stdout.join('\n');
+      final List<String> stdout = await process.stdout.rest.toList();
+      final String stdoutStr = stdout.join('\n');
       expect(stdoutStr, contains(evaluatingDirMsg));
       expect(stdoutStr, contains('--- Validating skill: skill-a ---'));
       expect(stdoutStr, contains(skillIsValidMsg));
@@ -178,9 +185,10 @@ Body''');
 
     test('exits with 1 if any subdirectory skill fails in "skills" folder',
         () async {
-      final skillsDir = await Directory('${tempDir.path}/skills').create();
-      final skill1 = await Directory('${skillsDir.path}/skill-a').create();
-      await File('${skill1.path}/SKILL.md').writeAsString('''---
+      final Directory skillsDir = await Directory('${tempDir.path}/skills').create();
+      final Directory skill1 = await Directory('${skillsDir.path}/skill-a').create();
+      await File('${skill1.path}/SKILL.md').writeAsString('''
+---
 name: skill-a
 description: Skill A
 ---
@@ -188,18 +196,18 @@ Body''');
 
       await Directory('${skillsDir.path}/skill-b').create(); // No SKILL.md
 
-      final process = await TestProcess.start(
+      final TestProcess process = await TestProcess.start(
         'dart',
         ['bin/dart_skills_lint.dart', '-d', skillsDir.path],
       );
 
       // Verify outputs
-      final stdout = await process.stdout.rest.toList();
+      final List<String> stdout = await process.stdout.rest.toList();
       expect(stdout.join('\n'), contains('--- Validating skill: skill-a ---'));
       expect(stdout.join('\n'), contains(skillIsValidMsg));
 
       expect(stdout.join('\n'), contains('--- Validating skill: skill-b ---'));
-      final stderr = await process.stderr.rest.toList();
+      final List<String> stderr = await process.stderr.rest.toList();
       expect(stderr.join('\n'), contains(skillIsInvalidMsg));
       await process.shouldExit(1);
     });
@@ -207,30 +215,31 @@ Body''');
     test(
         'exits with 1 early and does not process subsequent skills if --fast-fail is passed',
         () async {
-      final skillsDir = await Directory('${tempDir.path}/skills').create();
+      final Directory skillsDir = await Directory('${tempDir.path}/skills').create();
 
       await Directory('${skillsDir.path}/skill-a').create();
       // skill-a does not create SKILL.md, so it is invalid and will fail first (sorted order)
 
       await Directory('${skillsDir.path}/skill-b').create();
-      await File('${p.join(tempDir.path, 'skills', 'skill-b')}/SKILL.md').writeAsString('''---
+      await File('${p.join(tempDir.path, 'skills', 'skill-b')}/SKILL.md').writeAsString('''
+---
 name: skill-b
 description: Skill B
 ---
 Body''');
 
-      final process = await TestProcess.start(
+      final TestProcess process = await TestProcess.start(
         'dart',
         ['bin/dart_skills_lint.dart', '-d', skillsDir.path, '--fast-fail'],
       );
 
       // Verify outputs for skill-a
-      final stdout = await process.stdout.rest.toList();
-      final stdoutStr = stdout.join('\n');
+      final List<String> stdout = await process.stdout.rest.toList();
+      final String stdoutStr = stdout.join('\n');
       expect(stdoutStr, contains(evaluatingDirMsg));
       expect(stdoutStr, contains('--- Validating skill: skill-a ---'));
       
-      final stderr = await process.stderr.rest.toList();
+      final List<String> stderr = await process.stderr.rest.toList();
       expect(stderr.join('\n'), contains(skillIsInvalidMsg));
 
       // Since process exits after skill-a, stdout should be closed and no further lines (like skill-b) should appear.
@@ -239,14 +248,15 @@ Body''');
 
     test('exits with 0 and suppresses success messages if --quiet is passed',
         () async {
-      final skillDir = await Directory('${tempDir.path}/valid-skill').create();
-      await File('${skillDir.path}/SKILL.md').writeAsString('''---
+      final Directory skillDir = await Directory('${tempDir.path}/valid-skill').create();
+      await File('${skillDir.path}/SKILL.md').writeAsString('''
+---
 name: valid-skill
 description: A valid skill
 ---
 Body''');
 
-      final process = await TestProcess.start(
+      final TestProcess process = await TestProcess.start(
         'dart',
         ['bin/dart_skills_lint.dart', '-s', skillDir.path, '--quiet'],
       );
@@ -254,72 +264,74 @@ Body''');
       await process.shouldExit(0);
 
       // Stdout should be empty for a valid skill in quiet mode
-      final rest = await process.stdout.rest.toList();
+      final List<String> rest = await process.stdout.rest.toList();
       expect(rest, isEmpty);
     });
     test('fails with 64 when no flags passed and both defaults are missing', () async {
-      final process = await TestProcess.start(
+      final TestProcess process = await TestProcess.start(
         'dart',
         [p.normalize(p.absolute('bin/dart_skills_lint.dart'))],
         workingDirectory: tempDir.path,
       );
 
-      final stderr = await process.stderr.rest.toList();
+      final List<String> stderr = await process.stderr.rest.toList();
       expect(stderr.join('\n'), contains('Missing skills directory. Checked defaults:'));
       await process.shouldExit(64);
     });
 
     test('picks up .claude/skills when no flags passed and it exists', () async {
-      final claudeDir = await Directory('${tempDir.path}/.claude/skills').create(recursive: true);
-      final skillDir = await Directory('${claudeDir.path}/valid-skill').create();
-      await File('${skillDir.path}/SKILL.md').writeAsString('''---
+      final Directory claudeDir = await Directory('${tempDir.path}/.claude/skills').create(recursive: true);
+      final Directory skillDir = await Directory('${claudeDir.path}/valid-skill').create();
+      await File('${skillDir.path}/SKILL.md').writeAsString('''
+---
 name: valid-skill
 description: A valid skill
 ---
 Body''');
 
-      final process = await TestProcess.start(
+      final TestProcess process = await TestProcess.start(
         'dart',
         [p.normalize(p.absolute('bin/dart_skills_lint.dart'))],
         workingDirectory: tempDir.path,
       );
 
-      final stdout = await process.stdout.rest.toList();
+      final List<String> stdout = await process.stdout.rest.toList();
       expect(stdout.join('\n'), contains('Skill is valid.'));
       await process.shouldExit(0);
     });
     test('expands ~/ to HOME environment variable', () async {
-      final skillDir = await Directory('${tempDir.path}/some-skill').create();
-      await File('${skillDir.path}/SKILL.md').writeAsString('''---
+      final Directory skillDir = await Directory('${tempDir.path}/some-skill').create();
+      await File('${skillDir.path}/SKILL.md').writeAsString('''
+---
 name: some-skill
 description: A test skill
 ---
 Body''');
 
-      final process = await TestProcess.start(
+      final TestProcess process = await TestProcess.start(
         'dart',
         [p.normalize(p.absolute('bin/dart_skills_lint.dart')), '-s', '~/some-skill'],
         environment: {'HOME': tempDir.path},
       );
 
-      final stdout = await process.stdout.rest.toList();
+      final List<String> stdout = await process.stdout.rest.toList();
       expect(stdout.join('\n'), contains('Skill is valid.'));
       await process.shouldExit(0);
     });
 
     test('overrides valid-yaml-metadata flag to disabled', () async {
-      final skillDir = await Directory('${tempDir.path}/invalid-yaml').create();
+      final Directory skillDir = await Directory('${tempDir.path}/invalid-yaml').create();
       await File('${skillDir.path}/SKILL.md').writeAsString('Invalid YAML No Frontmatter');
 
       // 1. Run normally. Should fail because valid-yaml-metadata defaults to true (error).
-      final process = await TestProcess.start(
+      final TestProcess process = await TestProcess.start(
         'dart',
         ['bin/dart_skills_lint.dart', '-s', skillDir.path],
       );
       await process.shouldExit(1);
 
       // 2. Run with --no-valid-yaml-metadata. Should pass because the check is disabled!
-      final noYamlProcess = await TestProcess.start(
+      final TestProcess noYamlProcess = await TestProcess.start(
         'dart',
         ['bin/dart_skills_lint.dart', '-s', skillDir.path, '--no-valid-yaml-metadata'],
       );
@@ -327,59 +339,62 @@ Body''');
     });
 
     test('fails if -d specifies a directory with zero skills', () async {
-      final emptyDir = await Directory('${tempDir.path}/empty-root').create();
+      final Directory emptyDir = await Directory('${tempDir.path}/empty-root').create();
       
-      final process = await TestProcess.start(
+      final TestProcess process = await TestProcess.start(
         'dart',
         ['bin/dart_skills_lint.dart', '-d', emptyDir.path],
       );
       
       await process.shouldExit(1);
-      final stderr = await process.stderr.rest.toList();
+      final List<String> stderr = await process.stderr.rest.toList();
       expect(stderr.join('\n'), contains('No skills found to validate in the specified directories.'));
     });
 
     test('fails if -d specifies a single skill directory (no sub-folders found)', () async {
-      final skillAsRoot = await Directory('${tempDir.path}/single-skill-root').create();
-      await File('${skillAsRoot.path}/SKILL.md').writeAsString('''---
+      final Directory skillAsRoot = await Directory('${tempDir.path}/single-skill-root').create();
+      await File('${skillAsRoot.path}/SKILL.md').writeAsString('''
+---
 name: single-skill-root
 description: Not a root, but a skill folder.
 ---
 Body''');
 
-      final process = await TestProcess.start(
+      final TestProcess process = await TestProcess.start(
         'dart',
         ['bin/dart_skills_lint.dart', '-d', skillAsRoot.path],
       );
 
       await process.shouldExit(1);
-      final stderr = await process.stderr.rest.toList();
+      final List<String> stderr = await process.stderr.rest.toList();
       expect(stderr.join('\n'), contains('appears to be an individual skill. Use --skill / -s instead of -d / --skills-directory.'));
     });
 
     test('validates multiple skills with multiple -s flags', () async {
-      final skill1 = await Directory('${tempDir.path}/skill-1').create();
-      await File('${skill1.path}/SKILL.md').writeAsString('''---
+      final Directory skill1 = await Directory('${tempDir.path}/skill-1').create();
+      await File('${skill1.path}/SKILL.md').writeAsString('''
+---
 name: skill-1
 description: Skill 1
 ---
 Body''');
 
-      final skill2 = await Directory('${tempDir.path}/skill-2').create();
-      await File('${skill2.path}/SKILL.md').writeAsString('''---
+      final Directory skill2 = await Directory('${tempDir.path}/skill-2').create();
+      await File('${skill2.path}/SKILL.md').writeAsString('''
+---
 name: skill-2
 description: Skill 2
 ---
 Body''');
 
-      final process = await TestProcess.start(
+      final TestProcess process = await TestProcess.start(
         'dart',
         ['bin/dart_skills_lint.dart', '-s', skill1.path, '-s', skill2.path],
       );
 
       await process.shouldExit(0);
-      final stdout = await process.stdout.rest.toList();
-      final stdoutStr = stdout.join('\n');
+      final List<String> stdout = await process.stdout.rest.toList();
+      final String stdoutStr = stdout.join('\n');
       expect(stdoutStr, contains('--- Validating skill: skill-1 ---'));
       expect(stdoutStr, contains('--- Validating skill: skill-2 ---'));
     });
@@ -388,20 +403,21 @@ Body''');
       final malformedFile = File('${tempDir.path}/malformed.json');
       await malformedFile.writeAsString('{ malformed json }');
       
-      final skillFolder = await Directory('${tempDir.path}/skill-x').create();
-      await File('${skillFolder.path}/SKILL.md').writeAsString('''---
+      final Directory skillFolder = await Directory('${tempDir.path}/skill-x').create();
+      await File('${skillFolder.path}/SKILL.md').writeAsString('''
+---
 name: skill-x
 description: Valid skill
 ---
 Body''');
 
-      final process = await TestProcess.start(
+      final TestProcess process = await TestProcess.start(
         'dart',
         ['bin/dart_skills_lint.dart', '-s', skillFolder.path, '--ignore-file', malformedFile.path],
       );
 
       await process.shouldExit(0); // Valid skill should still pass
-      final stdout = await process.stdout.rest.toList();
+      final List<String> stdout = await process.stdout.rest.toList();
       expect(stdout.join('\n'), contains('Evaluating directory:'));
     });
   });

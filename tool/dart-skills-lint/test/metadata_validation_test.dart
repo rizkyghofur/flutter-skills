@@ -1,7 +1,9 @@
 import 'dart:io';
-import 'package:test/test.dart';
-import 'package:dart_skills_lint/src/validator.dart';
+
+import 'package:dart_skills_lint/src/models/validation_error.dart';
 import 'package:dart_skills_lint/src/rules.dart';
+import 'package:dart_skills_lint/src/validator.dart';
+import 'package:test/test.dart';
 
 void main() {
   group('Metadata (YAML) Validation', () {
@@ -18,36 +20,39 @@ void main() {
     });
 
     test('fails if YAML metadata is invalid', () async {
-      await File('${tempDir.path}/SKILL.md').writeAsString('''---
+      await File('${tempDir.path}/SKILL.md').writeAsString('''
+---
 invalid: yaml: frontmatter
 ---
 Body''');
       final validator = Validator();
-      final result = await validator.validate(tempDir);
+      final ValidationResult result = await validator.validate(tempDir);
 
       expect(result.isValid, isFalse);
       expect(result.errors, contains(contains('Invalid YAML metadata')));
     });
 
     test('fails if required field "name" is missing', () async {
-      await File('${tempDir.path}/SKILL.md').writeAsString('''---
+      await File('${tempDir.path}/SKILL.md').writeAsString('''
+---
 description: A test skill
 ---
 Body''');
       final validator = Validator();
-      final result = await validator.validate(tempDir);
+      final ValidationResult result = await validator.validate(tempDir);
 
       expect(result.isValid, isFalse);
       expect(result.errors, contains(contains('Missing required field: name')));
     });
 
     test('fails if required field "description" is missing', () async {
-      await File('${tempDir.path}/SKILL.md').writeAsString('''---
+      await File('${tempDir.path}/SKILL.md').writeAsString('''
+---
 name: metadata-test
 ---
 Body''');
       final validator = Validator();
-      final result = await validator.validate(tempDir);
+      final ValidationResult result = await validator.validate(tempDir);
 
       expect(result.isValid, isFalse);
       expect(result.errors,
@@ -57,7 +62,8 @@ Body''');
     test('passes without warning if disallowed fields are present', () async {
       final skillDir = Directory('${tempDir.path}/metadata-test');
       await skillDir.create();
-      await File('${skillDir.path}/SKILL.md').writeAsString('''---
+      await File('${skillDir.path}/SKILL.md').writeAsString('''
+---
 name: metadata-test
 description: A test skill
 extra-field: not allowed
@@ -65,17 +71,18 @@ extra-field: not allowed
 Body''');
 
       final validator = Validator();
-      final result = await validator.validate(skillDir);
+      final ValidationResult result = await validator.validate(skillDir);
 
       expect(result.isValid, isTrue);
       expect(result.warnings, isEmpty);
 
-      final disallowedErrors = result.validationErrors.where((e) => e.ruleId == disallowedFieldCheck.name);
+      final Iterable<ValidationError> disallowedErrors = result.validationErrors.where((e) => e.ruleId == disallowedFieldCheck.name);
       expect(disallowedErrors, isEmpty);
     });
 
     test('passes with all allowed fields and valid YAML', () async {
-      await File('${tempDir.path}/SKILL.md').writeAsString('''---
+      await File('${tempDir.path}/SKILL.md').writeAsString('''
+---
 name: metadata-test
 description: A test skill
 license: MIT
@@ -89,13 +96,14 @@ Body''');
       // We need to make sure directory name matches name in metadata
       final skillDir = Directory('${tempDir.path}/metadata-test');
       await skillDir.create();
-      await File('${skillDir.path}/SKILL.md').writeAsString('''---
+      await File('${skillDir.path}/SKILL.md').writeAsString('''
+---
 name: metadata-test
 description: A test skill
 ---
 Body''');
 
-      final result = await validator.validate(skillDir);
+      final ValidationResult result = await validator.validate(skillDir);
 
       expect(result.isValid, isTrue,
           reason: result.errors.isEmpty ? '' : result.errors.first);
