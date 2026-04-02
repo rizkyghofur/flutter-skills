@@ -1054,7 +1054,7 @@
     - https://docs.flutter.dev/resources/architectural-overview
     - https://docs.flutter.dev/resources/faq
 - name: flutter-interoperating-with-native-apis
-  description: Interoperates with native platform APIs on Android, iOS, and the web. Use when accessing device-specific features not available in Dart or calling existing native code.
+  description: Interoperates with native platform APIs in a Flutter app on Android, iOS, and the web. Use when accessing device-specific features not available in Dart or calling existing native code.
   instructions: |
     Native interop on Android, iOS, and Web involves several methods for
     integrating Flutter applications with platform-specific code and features.
@@ -1361,7 +1361,7 @@
     - https://docs.flutter.dev/ui/adaptive-responsive/general
     - https://docs.flutter.dev/ui/adaptive-responsive/large-screens
 - name: flutter-handling-concurrency
-  description: Executes long-running tasks in background isolates to keep the UI responsive. Use when performing heavy computations or parsing large datasets.
+  description: Executes long-running tasks in background isolates in a Flutter app to keep the UI responsive. Use when performing heavy computations or parsing large datasets.
   instructions: |
     Dart has a single-threaded execution model, which includes support for
     Isolates, an event loop, and asynchronous code. An Isolate is Dart's
