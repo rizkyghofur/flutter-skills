@@ -31,6 +31,7 @@ dart run skills generate-skill [options] [config_file]
 **Options:**
 *   `--skill`: Filter to generate only the specified skill by name.
 *   `--directory` (`-d`): The directory to output the generated skill folder. Defaults to `../skills/`.
+*   `--dry-run`: Performs a dry run, showing what would be generated and token count without writing files.
 
 **Example:**
 Generate all skills defined in resources/flutter_skills.yaml to the skills/ directory:
@@ -127,7 +128,7 @@ dart run skills update-readme
 
 ## Configuration
 
-The default configuration file is located at `tool/resources/flutter_skills.yaml`. It contains a list of skill definitions:
+The default configuration file is located at `resources/flutter_skills.yaml`. It contains a list of skill definitions:
 
 ```yaml
 - name: flutter-layout
