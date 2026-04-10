@@ -4,14 +4,16 @@ import '../models/analysis_severity.dart';
 import '../models/skill_context.dart';
 import '../models/skill_rule.dart';
 import '../models/validation_error.dart';
-import '../rules.dart';
 
 /// Enforces constraints on the skill name field.
 class NameFormatRule extends SkillRule {
-  NameFormatRule({this.severity = AnalysisSeverity.error});
+  NameFormatRule({this.severity = defaultSeverity});
+
+  static const String ruleName = 'invalid-skill-name';
+  static const AnalysisSeverity defaultSeverity = AnalysisSeverity.error;
 
   @override
-  final String name = invalidSkillNameCheck.name;
+  String get name => ruleName;
 
   @override
   final AnalysisSeverity severity;

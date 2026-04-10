@@ -3,14 +3,16 @@ import '../models/analysis_severity.dart';
 import '../models/skill_context.dart';
 import '../models/skill_rule.dart';
 import '../models/validation_error.dart';
-import '../rules.dart';
 
 /// Enforces that the description field is not too long.
 class DescriptionLengthRule extends SkillRule {
-  DescriptionLengthRule({this.severity = AnalysisSeverity.error});
+  DescriptionLengthRule({this.severity = defaultSeverity});
+
+  static const String ruleName = 'description-too-long';
+  static const AnalysisSeverity defaultSeverity = AnalysisSeverity.error;
 
   @override
-  final String name = descriptionTooLongCheck.name;
+  String get name => ruleName;
 
   @override
   final AnalysisSeverity severity;

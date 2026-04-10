@@ -4,14 +4,16 @@ import '../models/analysis_severity.dart';
 import '../models/skill_context.dart';
 import '../models/skill_rule.dart';
 import '../models/validation_error.dart';
-import '../rules.dart';
 
 /// Enforces that relative links in SKILL.md point to existing files.
 class RelativePathsRule extends SkillRule {
-  RelativePathsRule({this.severity = AnalysisSeverity.error});
+  RelativePathsRule({this.severity = defaultSeverity});
+
+  static const String ruleName = 'check-relative-paths';
+  static const AnalysisSeverity defaultSeverity = AnalysisSeverity.disabled;
 
   @override
-  final String name = relativePathsCheck.name;
+  String get name => ruleName;
 
   @override
   final AnalysisSeverity severity;

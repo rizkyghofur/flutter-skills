@@ -5,7 +5,8 @@
 import 'dart:io';
 
 import 'package:dart_skills_lint/src/models/analysis_severity.dart';
-import 'package:dart_skills_lint/src/rules.dart';
+import 'package:dart_skills_lint/src/rules/absolute_paths_rule.dart';
+import 'package:dart_skills_lint/src/rules/relative_paths_rule.dart';
 import 'package:dart_skills_lint/src/validator.dart';
 import 'package:test/test.dart';
 
@@ -34,7 +35,7 @@ void main() {
       await File('${refDir.path}/DETAILS.md').writeAsString('Details here');
 
       final validator =
-          Validator(ruleOverrides: {relativePathsCheck.name: AnalysisSeverity.warning});
+          Validator(ruleOverrides: {RelativePathsRule.ruleName: AnalysisSeverity.warning});
       final ValidationResult result = await validator.validate(skillDir);
 
       expect(result.isValid, isTrue);
@@ -48,7 +49,7 @@ void main() {
           '${buildFrontmatter(name: 'test-skill')}[Link to a references file missing](references/MISSING.md)\n');
 
       final validator =
-          Validator(ruleOverrides: {relativePathsCheck.name: AnalysisSeverity.warning});
+          Validator(ruleOverrides: {RelativePathsRule.ruleName: AnalysisSeverity.warning});
       final ValidationResult result = await validator.validate(skillDir);
 
       expect(result.isValid, isTrue);
@@ -61,8 +62,8 @@ void main() {
           '${buildFrontmatter(name: 'test-skill')}[Absolute path link](/tmp/some_absolute_path/file.md)\n');
 
       final validator = Validator(ruleOverrides: {
-        relativePathsCheck.name: AnalysisSeverity.warning,
-        absolutePathsCheck.name: AnalysisSeverity.error,
+        RelativePathsRule.ruleName: AnalysisSeverity.warning,
+        AbsolutePathsRule.ruleName: AnalysisSeverity.error,
       });
       final ValidationResult result = await validator.validate(skillDir);
 
@@ -76,7 +77,7 @@ void main() {
           '${buildFrontmatter(name: 'test-skill')}- [Web link](http://example.com)\n- [Web TLS link](https://example.com)\n- [Email link](mailto:user@domain.com)\n- [JS link](javascript:alert(1))\n- [Data URI](data:image/png;base64,iVBORw)\n- [Anchor link](#section-name)\n');
 
       final validator =
-          Validator(ruleOverrides: {relativePathsCheck.name: AnalysisSeverity.warning});
+          Validator(ruleOverrides: {RelativePathsRule.ruleName: AnalysisSeverity.warning});
       final ValidationResult result = await validator.validate(skillDir);
 
       expect(result.isValid, isTrue);

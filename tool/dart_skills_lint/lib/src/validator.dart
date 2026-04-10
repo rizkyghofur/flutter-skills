@@ -13,13 +13,9 @@ import 'models/check_type.dart';
 import 'models/skill_context.dart';
 import 'models/skill_rule.dart';
 import 'models/validation_error.dart';
-import 'rules.dart';
-import 'rules/absolute_paths_rule.dart';
-import 'rules/description_length_rule.dart';
-import 'rules/disallowed_field_rule.dart';
-import 'rules/name_format_rule.dart';
-import 'rules/relative_paths_rule.dart';
-import 'rules/valid_yaml_metadata_rule.dart';
+import 'rule_registry.dart';
+
+const _dirStructureUrl = 'https://agentskills.io/specification#directory-structure';
 
 final _log = Logger('dart_skills_lint');
 
@@ -59,15 +55,18 @@ class Validator {
   Validator({
     Map<String, AnalysisSeverity>? ruleOverrides,
     List<SkillRule>? customRules,
-  })  : _ruleOverrides = ruleOverrides ?? {},
+  })  : _customSeverities = ruleOverrides ?? {},
         _customRules = customRules ?? [];
   static const _skillFileName = 'SKILL.md';
 
-  final Map<String, AnalysisSeverity> _ruleOverrides;
+  /// The name of the special check for missing files or directories.
+  static const String pathDoesNotExist = 'path-does-not-exist';
+
+  final Map<String, AnalysisSeverity> _customSeverities;
   final List<SkillRule> _customRules;
 
-  AnalysisSeverity _getSeverity(CheckType rule) {
-    return _ruleOverrides[rule.name] ?? rule.defaultSeverity;
+  AnalysisSeverity _getSeverity(String name, AnalysisSeverity defaultSeverity) {
+    return _customSeverities[name] ?? defaultSeverity;
   }
 
   static final _skillStartRegex = RegExp(r'^---\s*\n(.*?)\n---\s*\n', dotAll: true);
@@ -145,12 +144,13 @@ class Validator {
       }
     }
 
-    addRule(ValidYamlMetadataRule(severity: _getSeverity(validYamlMetadataCheck)));
-    addRule(DisallowedFieldRule(severity: _getSeverity(disallowedFieldCheck)));
-    addRule(NameFormatRule(severity: _getSeverity(invalidSkillNameCheck)));
-    addRule(AbsolutePathsRule(severity: _getSeverity(absolutePathsCheck)));
-    addRule(RelativePathsRule(severity: _getSeverity(relativePathsCheck)));
-    addRule(DescriptionLengthRule(severity: _getSeverity(descriptionTooLongCheck)));
+    for (final CheckType check in RuleRegistry.allChecks) {
+      final AnalysisSeverity severity = _getSeverity(check.name, check.defaultSeverity);
+      final SkillRule? rule = RuleRegistry.createRule(check.name, severity);
+      if (rule != null) {
+        addRule(rule);
+      }
+    }
 
     _customRules.forEach(addRule);
 
@@ -159,19 +159,22 @@ class Validator {
 
   Future<bool> _checkDirectoryStructure(
       Directory dir, List<ValidationError> validationErrors) async {
+    final AnalysisSeverity pathDoesNotExistSeverity =
+        _getSeverity(pathDoesNotExist, AnalysisSeverity.error);
+
     if (!dir.existsSync()) {
       if (File(dir.path).existsSync()) {
         validationErrors.add(ValidationError(
-            ruleId: pathDoesNotExistCheck.name,
+            ruleId: pathDoesNotExist,
             file: dir.path,
-            message: 'Path is not a directory: ${dir.path} (see $dirStructureUrl)',
-            severity: _getSeverity(pathDoesNotExistCheck)));
+            message: 'Path is not a directory: ${dir.path} (see $_dirStructureUrl)',
+            severity: pathDoesNotExistSeverity));
       } else {
         validationErrors.add(ValidationError(
-            ruleId: pathDoesNotExistCheck.name,
+            ruleId: pathDoesNotExist,
             file: dir.path,
-            message: 'Directory does not exist: ${dir.path} (see $dirStructureUrl)',
-            severity: _getSeverity(pathDoesNotExistCheck)));
+            message: 'Directory does not exist: ${dir.path} (see $_dirStructureUrl)',
+            severity: pathDoesNotExistSeverity));
       }
       return false;
     }
@@ -179,10 +182,10 @@ class Validator {
     final skillMdFile = File(p.join(dir.path, _skillFileName));
     if (!skillMdFile.existsSync()) {
       validationErrors.add(ValidationError(
-          ruleId: pathDoesNotExistCheck.name,
+          ruleId: pathDoesNotExist,
           file: dir.path,
-          message: '$_skillFileName is missing in directory: ${dir.path} (see $dirStructureUrl)',
-          severity: _getSeverity(pathDoesNotExistCheck)));
+          message: '$_skillFileName is missing in directory: ${dir.path} (see $_dirStructureUrl)',
+          severity: pathDoesNotExistSeverity));
       return false;
     }
     return true;

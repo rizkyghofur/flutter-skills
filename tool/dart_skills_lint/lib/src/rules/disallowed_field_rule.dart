@@ -3,14 +3,16 @@ import '../models/analysis_severity.dart';
 import '../models/skill_context.dart';
 import '../models/skill_rule.dart';
 import '../models/validation_error.dart';
-import '../rules.dart';
 
 /// Enforces that only allowed fields are present in YAML metadata.
 class DisallowedFieldRule extends SkillRule {
-  DisallowedFieldRule({this.severity = AnalysisSeverity.warning});
+  DisallowedFieldRule({this.severity = defaultSeverity});
+
+  static const String ruleName = 'disallowed-field';
+  static const AnalysisSeverity defaultSeverity = AnalysisSeverity.disabled;
 
   @override
-  final String name = disallowedFieldCheck.name;
+  String get name => ruleName;
 
   @override
   final AnalysisSeverity severity;

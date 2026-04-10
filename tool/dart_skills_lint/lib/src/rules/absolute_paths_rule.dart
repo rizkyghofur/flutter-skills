@@ -3,14 +3,16 @@ import '../models/analysis_severity.dart';
 import '../models/skill_context.dart';
 import '../models/skill_rule.dart';
 import '../models/validation_error.dart';
-import '../rules.dart';
 
 /// Enforces that links in SKILL.md do not use absolute paths.
 class AbsolutePathsRule extends SkillRule {
-  AbsolutePathsRule({this.severity = AnalysisSeverity.error});
+  AbsolutePathsRule({this.severity = defaultSeverity});
+
+  static const String ruleName = 'check-absolute-paths';
+  static const AnalysisSeverity defaultSeverity = AnalysisSeverity.warning;
 
   @override
-  final String name = absolutePathsCheck.name;
+  String get name => ruleName;
 
   @override
   final AnalysisSeverity severity;

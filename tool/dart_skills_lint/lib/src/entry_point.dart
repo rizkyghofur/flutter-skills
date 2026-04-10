@@ -12,11 +12,13 @@ import 'package:path/path.dart' as p;
 
 import 'config_parser.dart';
 import 'models/analysis_severity.dart';
+import 'models/check_type.dart';
 import 'models/ignore_entry.dart';
 import 'models/skill_rule.dart';
 import 'models/skills_ignores.dart';
 import 'models/validation_error.dart';
-import 'rules.dart';
+import 'rule_registry.dart';
+
 import 'skills_ignores_storage.dart';
 import 'validator.dart';
 
@@ -65,14 +67,18 @@ Future<void> runApp(List<String> args) async {
 
   final parser = ArgParser()
     ..addFlag(helpFlag, abbr: 'h', negatable: false, help: 'Show usage information.')
-    ..addFlag(_printWarningsFlag, abbr: 'w', defaultsTo: true, help: 'Print validation warnings.')
-    ..addFlag(relativePathsCheck.name, help: 'Check if relative paths exist.')
-    ..addFlag(disallowedFieldCheck.name, help: 'Check for disallowed fields in YAML metadata.')
-    ..addFlag(validYamlMetadataCheck.name,
-        defaultsTo: true, help: 'Check if YAML metadata is valid.')
-    ..addFlag(descriptionTooLongCheck.name,
-        defaultsTo: true, help: 'Check if description is too long.')
-    ..addFlag(invalidSkillNameCheck.name, defaultsTo: true, help: 'Check if skill name is invalid.')
+    ..addFlag(_printWarningsFlag, abbr: 'w', defaultsTo: true, help: 'Print validation warnings.');
+
+  // Dynamically add flags for all registered rules.
+  for (final CheckType check in RuleRegistry.allChecks) {
+    parser.addFlag(
+      check.name,
+      defaultsTo: check.defaultSeverity != AnalysisSeverity.disabled,
+      help: check.help,
+    );
+  }
+
+  parser
     ..addFlag(_fastFailFlag,
         negatable: false, help: 'Fail immediately on the first skill validation error.')
     ..addFlag(_quietFlag,
@@ -201,17 +207,9 @@ Future<bool> validateSkills({
       continue;
     }
 
-    final localRules = Map<String, AnalysisSeverity>.from(resolvedRules);
-    String? localIgnoreFile;
-
-    for (final DirectoryConfig dirConfig in config.directoryConfigs) {
-      final String normalizedConfigPath = p.normalize(dirConfig.path);
-      if (normalizedSkillPath.startsWith(normalizedConfigPath)) {
-        localRules.addAll(dirConfig.rules);
-        localIgnoreFile = dirConfig.ignoreFile;
-        break;
-      }
-    }
+    final Map<String, AnalysisSeverity> localRules =
+        _resolveRulesForPath(normalizedSkillPath, config, resolvedRules);
+    String? localIgnoreFile = _resolveIgnoreFileForPath(normalizedSkillPath, config);
 
     if (ignoreFileOverride != null) {
       localIgnoreFile = ignoreFileOverride;
@@ -269,17 +267,9 @@ Future<bool> validateSkills({
       continue;
     }
 
-    final localRules = Map<String, AnalysisSeverity>.from(resolvedRules);
-    String? localIgnoreFile;
-
-    for (final DirectoryConfig dirConfig in config.directoryConfigs) {
-      final String normalizedConfigPath = p.normalize(dirConfig.path);
-      if (normalizedRootPath.startsWith(normalizedConfigPath)) {
-        localRules.addAll(dirConfig.rules);
-        localIgnoreFile = dirConfig.ignoreFile;
-        break;
-      }
-    }
+    final Map<String, AnalysisSeverity> localRules =
+        _resolveRulesForPath(normalizedRootPath, config, resolvedRules);
+    String? localIgnoreFile = _resolveIgnoreFileForPath(normalizedRootPath, config);
 
     if (ignoreFileOverride != null) {
       localIgnoreFile = ignoreFileOverride;
@@ -373,43 +363,62 @@ Future<bool> validateSkills({
 Map<String, AnalysisSeverity> resolveRules(ArgResults results, Configuration config) {
   final resolved = <String, AnalysisSeverity>{};
 
-  resolved[relativePathsCheck.name] = relativePathsCheck.defaultSeverity;
-  resolved[absolutePathsCheck.name] = absolutePathsCheck.defaultSeverity;
-  resolved[disallowedFieldCheck.name] = disallowedFieldCheck.defaultSeverity;
-  resolved[validYamlMetadataCheck.name] = validYamlMetadataCheck.defaultSeverity;
-  resolved[descriptionTooLongCheck.name] = descriptionTooLongCheck.defaultSeverity;
-  resolved[invalidSkillNameCheck.name] = invalidSkillNameCheck.defaultSeverity;
-  resolved[pathDoesNotExistCheck.name] = pathDoesNotExistCheck.defaultSeverity;
+  // 1. Initialize with default severities from the registry.
+  for (final CheckType check in RuleRegistry.allChecks) {
+    resolved[check.name] = check.defaultSeverity;
+  }
 
+  // 2. Override with configurations from the YAML file.
   resolved.addAll(config.configuredRules);
 
-  if (results.wasParsed(relativePathsCheck.name)) {
-    resolved[relativePathsCheck.name] = (results[relativePathsCheck.name] as bool)
-        ? AnalysisSeverity.warning
-        : AnalysisSeverity.disabled;
-  }
-  if (results.wasParsed(disallowedFieldCheck.name)) {
-    resolved[disallowedFieldCheck.name] = (results[disallowedFieldCheck.name] as bool)
-        ? AnalysisSeverity.warning
-        : AnalysisSeverity.disabled;
-  }
-  if (results.wasParsed(validYamlMetadataCheck.name)) {
-    resolved[validYamlMetadataCheck.name] = (results[validYamlMetadataCheck.name] as bool)
-        ? validYamlMetadataCheck.defaultSeverity
-        : AnalysisSeverity.disabled;
-  }
-  if (results.wasParsed(descriptionTooLongCheck.name)) {
-    resolved[descriptionTooLongCheck.name] = (results[descriptionTooLongCheck.name] as bool)
-        ? descriptionTooLongCheck.defaultSeverity
-        : AnalysisSeverity.disabled;
-  }
-  if (results.wasParsed(invalidSkillNameCheck.name)) {
-    resolved[invalidSkillNameCheck.name] = (results[invalidSkillNameCheck.name] as bool)
-        ? invalidSkillNameCheck.defaultSeverity
-        : AnalysisSeverity.disabled;
+  // 3. Override with CLI flags. CLI flags take highest precedence.
+  for (final CheckType check in RuleRegistry.allChecks) {
+    final String name = check.name;
+
+    // Skip if the flag was not passed on the command line.
+    if (!results.options.contains(name) || !results.wasParsed(name)) {
+      continue;
+    }
+
+    // TODO(reidbaker): Handle options in addition to flags.
+    final Object? value = results[name];
+    if (value is! bool) {
+      continue;
+    }
+
+    if (value) {
+      // If the user explicitly enabled the rule via flag (e.g., --rule), set to error.
+      resolved[name] = AnalysisSeverity.error;
+    } else {
+      // If the user explicitly disabled the rule via flag (e.g., --no-rule).
+      resolved[name] = AnalysisSeverity.disabled;
+    }
   }
 
   return resolved;
+}
+
+Map<String, AnalysisSeverity> _resolveRulesForPath(
+    String normalizedPath, Configuration config, Map<String, AnalysisSeverity> baseRules) {
+  final localRules = Map<String, AnalysisSeverity>.from(baseRules);
+  for (final DirectoryConfig dirConfig in config.directoryConfigs) {
+    final String normalizedConfigPath = p.normalize(dirConfig.path);
+    if (normalizedPath.startsWith(normalizedConfigPath)) {
+      localRules.addAll(dirConfig.rules);
+      break;
+    }
+  }
+  return localRules;
+}
+
+String? _resolveIgnoreFileForPath(String normalizedPath, Configuration config) {
+  for (final DirectoryConfig dirConfig in config.directoryConfigs) {
+    final String normalizedConfigPath = p.normalize(dirConfig.path);
+    if (normalizedPath.startsWith(normalizedConfigPath)) {
+      return dirConfig.ignoreFile;
+    }
+  }
+  return null;
 }
 
 Future<Map<String, List<IgnoreEntry>>> _loadIgnores(
@@ -417,22 +426,27 @@ Future<Map<String, List<IgnoreEntry>>> _loadIgnores(
   final String ignorePath = ignoreFileOverride != null
       ? p.normalize(_expandPath(ignoreFileOverride))
       : p.join(rootDir.path, defaultIgnoreFileName);
+
   final file = File(ignorePath);
-  if (!file.existsSync()) {
-    if (ignoreFileOverride != null) {
-      _log.warning('File not found generating-baseline');
-      try {
-        await file.writeAsString(jsonEncode({SkillsIgnores.skillsKey: <String, dynamic>{}}));
-      } catch (_) {
-        // Fallback or ignore write errors
-      }
-    }
-    return {};
+
+  if (file.existsSync()) {
+    final storage = SkillsIgnoresStorage();
+    final SkillsIgnores ignores = await storage.load(ignorePath);
+    return ignores.skills;
   }
 
-  final storage = SkillsIgnoresStorage();
-  final SkillsIgnores ignores = await storage.load(ignorePath);
-  return ignores.skills;
+  // If a custom ignore file was specified but not found, create an empty one
+  // so the user can start adding ignores to it.
+  if (ignoreFileOverride != null) {
+    _log.warning('File not found generating-baseline');
+    try {
+      await file.writeAsString(jsonEncode({SkillsIgnores.skillsKey: <String, dynamic>{}}));
+    } catch (_) {
+      // Ignore write errors, we will just return empty ignores.
+    }
+  }
+
+  return {};
 }
 
 void _applyIgnores(ValidationResult result, List<IgnoreEntry> ignores, Directory skillDir) {

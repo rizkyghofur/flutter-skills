@@ -101,9 +101,9 @@ dart_skills_lint:
         workingDirectory: tempDir.path,
       );
 
-      final List<String> stdout = await process.stdout.rest.toList();
-      expect(stdout.join('\n'), contains('Warnings:'));
-      await process.shouldExit(0);
+      final List<String> stderr = await process.stderr.rest.toList();
+      expect(stderr.join('\n'), contains('Skill is invalid:'));
+      await process.shouldExit(1);
     });
 
     test('writes empty ignore-file if missing and specified in config', () async {
