@@ -4,6 +4,9 @@
 
 import 'dart:io';
 
+import 'package:dart_skills_lint/src/rules/description_length_rule.dart';
+import 'package:dart_skills_lint/src/rules/name_format_rule.dart';
+import 'package:dart_skills_lint/src/rules/valid_yaml_metadata_rule.dart';
 import 'package:dart_skills_lint/src/validator.dart';
 import 'package:test/test.dart';
 
@@ -33,15 +36,16 @@ void main() {
         expect(result.errors, contains(contains('lowercase')));
       });
 
-      test('fails if too long (> ${Validator.maxNameLength} chars)', () async {
-        final String longName = 'a' * (Validator.maxNameLength + 1);
+      test('fails if too long (> ${NameFormatRule.maxNameLength} chars)', () async {
+        final String longName = 'a' * (NameFormatRule.maxNameLength + 1);
         final Directory skillDir = await Directory('${tempDir.path}/$longName').create();
         await File('${skillDir.path}/SKILL.md')
             .writeAsString('${buildFrontmatter(name: longName)}Body');
         final validator = Validator();
         final ValidationResult result = await validator.validate(skillDir);
         expect(result.isValid, isFalse);
-        expect(result.errors, contains(contains('Maximum ${Validator.maxNameLength} characters')));
+        expect(result.errors,
+            contains(contains('Maximum ${NameFormatRule.maxNameLength} characters')));
       });
 
       test('fails if contains invalid characters', () async {
@@ -97,8 +101,8 @@ void main() {
     });
 
     group('Description', () {
-      test('fails if too long (> ${Validator.maxDescriptionLength} chars)', () async {
-        final String longDesc = 'a' * (Validator.maxDescriptionLength + 1);
+      test('fails if too long (> ${DescriptionLengthRule.maxDescriptionLength} chars)', () async {
+        final String longDesc = 'a' * (DescriptionLengthRule.maxDescriptionLength + 1);
         final Directory skillDir = await Directory('${tempDir.path}/skill-name').create();
         await File('${skillDir.path}/SKILL.md')
             .writeAsString('${buildFrontmatter(name: 'skill-name', description: longDesc)}Body');
@@ -106,13 +110,13 @@ void main() {
         final ValidationResult result = await validator.validate(skillDir);
         expect(result.isValid, isFalse);
         expect(result.errors,
-            contains(contains('Maximum ${Validator.maxDescriptionLength} characters')));
+            contains(contains('Maximum ${DescriptionLengthRule.maxDescriptionLength} characters')));
       });
     });
 
     group('Compatibility', () {
-      test('fails if too long (> ${Validator.maxCompatibilityLength} chars)', () async {
-        final String longComp = 'a' * (Validator.maxCompatibilityLength + 1);
+      test('fails if too long (> ${ValidYamlMetadataRule.maxCompatibilityLength} chars)', () async {
+        final String longComp = 'a' * (ValidYamlMetadataRule.maxCompatibilityLength + 1);
         final Directory skillDir = await Directory('${tempDir.path}/skill-name').create();
         await File('${skillDir.path}/SKILL.md').writeAsString('''
 ---
@@ -124,8 +128,10 @@ Body''');
         final validator = Validator();
         final ValidationResult result = await validator.validate(skillDir);
         expect(result.isValid, isFalse);
-        expect(result.errors,
-            contains(contains('Maximum ${Validator.maxCompatibilityLength} characters')));
+        expect(
+            result.errors,
+            contains(
+                contains('Maximum ${ValidYamlMetadataRule.maxCompatibilityLength} characters')));
       });
     });
   });

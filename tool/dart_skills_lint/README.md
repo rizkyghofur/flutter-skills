@@ -129,6 +129,48 @@ void main() {
 
 You can also use `Validator` and `ValidationResult` directly if you need to inspect the errors programmatically.
 
+### Custom Rules
+
+You can author custom rules by extending the `SkillRule` class and passing them to `validateSkills` or the `Validator` constructor.
+
+Example custom rule:
+```dart
+import 'package:dart_skills_lint/dart_skills_lint.dart';
+
+class MyCustomRule extends SkillRule {
+  @override
+  final String name = 'my-custom-rule';
+
+  @override
+  final AnalysisSeverity severity = AnalysisSeverity.warning;
+
+  @override
+  Future<List<ValidationError>> validate(SkillContext context) async {
+    final errors = <ValidationError>[];
+    final yaml = context.parsedYaml;
+    if (yaml == null) return errors;
+
+    if (yaml['metadata']?['deprecated'] == true) {
+      errors.add(ValidationError(
+        ruleId: name,
+        severity: severity,
+        file: 'SKILL.md',
+        message: 'This skill is marked as deprecated.',
+      ));
+    }
+    return errors;
+  }
+}
+```
+
+Then use it in your test:
+```dart
+    await validateSkills(
+      skillDirPaths: ['../../skills'],
+      customRules: [MyCustomRule()],
+    );
+```
+
 ## Specification Validation
 
 The linter checks against the criteria defined in `documentation/knowledge/SPECIFICATION.md` (Section 5.1). Key checks include:

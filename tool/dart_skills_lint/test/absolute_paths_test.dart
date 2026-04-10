@@ -6,7 +6,8 @@ import 'dart:io';
 
 import 'package:dart_skills_lint/src/models/analysis_severity.dart';
 
-import 'package:dart_skills_lint/src/rules.dart';
+import 'package:dart_skills_lint/src/rules/absolute_paths_rule.dart';
+import 'package:dart_skills_lint/src/rules/relative_paths_rule.dart';
 import 'package:dart_skills_lint/src/validator.dart';
 import 'package:test/test.dart';
 
@@ -58,7 +59,7 @@ void main() {
           .writeAsString('${buildFrontmatter(name: 'test-skill')}[Relative link](C:relative.md)\n');
 
       final validator =
-          Validator(ruleOverrides: {relativePathsCheck.name: AnalysisSeverity.disabled});
+          Validator(ruleOverrides: {RelativePathsRule.ruleName: AnalysisSeverity.disabled});
       final ValidationResult result = await validator.validate(skillDir);
 
       expect(result.isValid, isTrue);
@@ -72,7 +73,7 @@ void main() {
           .writeAsString('${buildFrontmatter(name: 'test-skill')}[Relative link](file.md)\n');
 
       final validator =
-          Validator(ruleOverrides: {relativePathsCheck.name: AnalysisSeverity.disabled});
+          Validator(ruleOverrides: {RelativePathsRule.ruleName: AnalysisSeverity.disabled});
       final ValidationResult result = await validator.validate(skillDir);
 
       expect(result.isValid, isTrue);
@@ -85,7 +86,7 @@ void main() {
           '${buildFrontmatter(name: 'test-skill')}Body with [broken link](missing.md) and [absolute link](/absolute/path.md)');
 
       final validator =
-          Validator(ruleOverrides: {absolutePathsCheck.name: AnalysisSeverity.disabled});
+          Validator(ruleOverrides: {AbsolutePathsRule.ruleName: AnalysisSeverity.disabled});
       final ValidationResult result = await validator.validate(skillDir);
 
       expect(result.isValid, isTrue);
@@ -100,7 +101,7 @@ void main() {
           '${buildFrontmatter(name: 'test-skill')}Body with [absolute link](/absolute/path.md)');
 
       final validator =
-          Validator(ruleOverrides: {absolutePathsCheck.name: AnalysisSeverity.warning});
+          Validator(ruleOverrides: {AbsolutePathsRule.ruleName: AnalysisSeverity.warning});
       final ValidationResult result = await validator.validate(skillDir);
 
       expect(result.isValid, isTrue); // Warnings don't fail validation

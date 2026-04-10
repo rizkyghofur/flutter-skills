@@ -1,6 +1,6 @@
 name: dart_skills_lint
 description: A static analysis linter for agent skills.
-version: 0.1.0
+version: 0.2.0
 repository: https://github.com/flutter/skills
 
 environment:

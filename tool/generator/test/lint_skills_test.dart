@@ -3,19 +3,32 @@
 // BSD-style license that can be found in the LICENSE file.
 
 import 'package:dart_skills_lint/dart_skills_lint.dart';
+import 'package:logging/logging.dart';
 import 'package:test/test.dart';
+
+import 'custom_skill_rules/last_modified_rule.dart';
 
 void main() {
   test('Run skills linter', () async {
-    expect(
-      await validateSkills(
-        skillDirPaths: ['../../skills'],
-        resolvedRules: {
-          'check-relative-paths': AnalysisSeverity.error,
-          'check-absolute-paths': AnalysisSeverity.error,
-        },
-      ),
-      isTrue,
-    );
+    Logger.root.level = Level.ALL;
+    final subscription = Logger.root.onRecord.listen((record) {
+      printOnFailure('${record.level.name}: ${record.message}');
+    });
+
+    try {
+      expect(
+        await validateSkills(
+          skillDirPaths: ['../../skills'],
+          resolvedRules: {
+            'check-relative-paths': AnalysisSeverity.error,
+            'check-absolute-paths': AnalysisSeverity.error,
+          },
+          customRules: [LastModifiedRule()],
+        ),
+        isTrue,
+      );
+    } finally {
+      await subscription.cancel();
+    }
   });
 }

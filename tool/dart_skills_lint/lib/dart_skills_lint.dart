@@ -5,5 +5,7 @@
 export 'src/config_parser.dart';
 export 'src/entry_point.dart';
 export 'src/models/analysis_severity.dart';
+export 'src/models/skill_context.dart';
+export 'src/models/skill_rule.dart';
 export 'src/models/validation_error.dart';
 export 'src/validator.dart';

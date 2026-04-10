@@ -103,7 +103,7 @@ packages:
       path: "../dart_skills_lint"
       relative: true
     source: path
-    version: "0.1.0"
+    version: "0.2.0"
   file:
     dependency: "direct main"
     description:

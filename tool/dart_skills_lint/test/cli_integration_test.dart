@@ -6,7 +6,11 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:dart_skills_lint/src/entry_point.dart';
+import 'package:dart_skills_lint/src/models/check_type.dart';
+import 'package:dart_skills_lint/src/models/ignore_entry.dart';
 import 'package:dart_skills_lint/src/models/skills_ignores.dart';
+import 'package:dart_skills_lint/src/rule_registry.dart';
+import 'package:dart_skills_lint/src/validator.dart';
 import 'package:path/path.dart' as p;
 import 'package:test/test.dart';
 import 'package:test_process/test_process.dart';
@@ -390,6 +394,78 @@ dart_skills_lint:
       await process.shouldExit(0); // Valid skill should still pass
       final List<String> stdout = await process.stdout.rest.toList();
       expect(stdout.join('\n'), contains('Evaluating directory:'));
+    });
+
+    test('CLI help displays all registered rules', () async {
+      final TestProcess process = await TestProcess.start(
+        'dart',
+        [p.normalize(p.absolute('bin/dart_skills_lint.dart')), '--help'],
+      );
+      await process.shouldExit(0);
+      final List<String> stdout = await process.stdout.rest.toList();
+      final String stdoutStr = stdout.join('\n');
+
+      for (final CheckType check in RuleRegistry.allChecks) {
+        expect(stdoutStr, contains(check.name));
+      }
+    });
+
+    test('CLI help does not display path-does-not-exist', () async {
+      final TestProcess process = await TestProcess.start(
+        'dart',
+        [p.normalize(p.absolute('bin/dart_skills_lint.dart')), '--help'],
+      );
+      await process.shouldExit(0);
+      final List<String> stdout = await process.stdout.rest.toList();
+      final String stdoutStr = stdout.join('\n');
+
+      expect(stdoutStr, isNot(contains(Validator.pathDoesNotExist)));
+    });
+
+    test('ignores directory missing SKILL.md if listed in ignore file', () async {
+      final Directory skillsDir = await Directory('${tempDir.path}/skills').create();
+
+      // Create a valid skill
+      final Directory skillDir = await Directory('${skillsDir.path}/valid-skill').create();
+      await File('${skillDir.path}/SKILL.md')
+          .writeAsString('---\nname: valid-skill\ndescription: A valid skill\n---\nBody');
+
+      // Create a non-skill directory
+      await Directory('${skillsDir.path}/contributing').create();
+
+      // Create ignore file
+      final ignoreFile = File('${tempDir.path}/$defaultIgnoreFileName');
+      await ignoreFile.writeAsString(jsonEncode({
+        SkillsIgnores.skillsKey: {
+          'contributing': [
+            {
+              IgnoreEntry.ruleIdKey: Validator.pathDoesNotExist,
+              IgnoreEntry.fileNameKey: 'skills/contributing'
+            }
+          ]
+        }
+      }));
+
+      final configFile = File('${tempDir.path}/dart_skills_lint.yaml');
+      await configFile.writeAsString('''
+dart_skills_lint:
+  directories:
+    - path: "skills"
+      ignore_file: "$defaultIgnoreFileName"
+''');
+
+      final TestProcess process = await TestProcess.start(
+        'dart',
+        [p.normalize(p.absolute('bin/dart_skills_lint.dart')), '-d', 'skills'],
+        workingDirectory: tempDir.path,
+      );
+
+      await process.shouldExit(0);
+
+      final List<String> stdout = await process.stdout.rest.toList();
+      final String stdoutStr = stdout.join('\n');
+      expect(stdoutStr, contains('--- Validating skill: valid-skill ---'));
+      expect(stdoutStr, contains('--- Validating skill: contributing ---'));
     });
   });
 }
