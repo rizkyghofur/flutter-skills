@@ -5,6 +5,7 @@
 - Added runtime assertion for duplicate rule names.
 - Added warning when a rule emits an error with severity different from its definition.
 - Updated `README.md` with custom rules documentation.
+- **Breaking Change**: Enabling a rule via CLI flag now sets its severity to `error` instead of `warning`.
 
 ## 0.1.0
 

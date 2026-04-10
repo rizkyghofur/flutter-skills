@@ -376,7 +376,7 @@ Map<String, AnalysisSeverity> resolveRules(ArgResults results, Configuration con
     final String name = check.name;
 
     // Skip if the flag was not passed on the command line.
-    if (!results.options.contains(name) || !results.wasParsed(name)) {
+    if (!results.wasParsed(name)) {
       continue;
     }
 
@@ -456,7 +456,7 @@ void _applyIgnores(ValidationResult result, List<IgnoreEntry> ignores, Directory
     }
     final String fileName = error.file;
     for (final ignore in ignores) {
-      if (ignore.ruleId == error.ruleId && ignore.fileName == fileName) {
+      if (ignore.ruleId == error.ruleId && p.normalize(ignore.fileName) == p.normalize(fileName)) {
         error.isIgnored = true;
         ignore.used = true;
         break;

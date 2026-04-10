@@ -6,6 +6,8 @@ import 'package:args/args.dart';
 import 'package:dart_skills_lint/src/config_parser.dart';
 import 'package:dart_skills_lint/src/entry_point.dart';
 import 'package:dart_skills_lint/src/models/analysis_severity.dart';
+import 'package:dart_skills_lint/src/models/check_type.dart';
+import 'package:dart_skills_lint/src/rule_registry.dart';
 import 'package:dart_skills_lint/src/rules/absolute_paths_rule.dart';
 import 'package:dart_skills_lint/src/rules/description_length_rule.dart';
 import 'package:dart_skills_lint/src/rules/disallowed_field_rule.dart';
@@ -17,12 +19,14 @@ import 'package:test/test.dart';
 void main() {
   group('resolveRules', () {
     ArgParser createParser() {
-      return ArgParser()
-        ..addFlag(RelativePathsRule.ruleName)
-        ..addFlag(DisallowedFieldRule.ruleName)
-        ..addFlag(ValidYamlMetadataRule.ruleName, defaultsTo: true)
-        ..addFlag(DescriptionLengthRule.ruleName, defaultsTo: true)
-        ..addFlag(NameFormatRule.ruleName, defaultsTo: true);
+      final parser = ArgParser();
+      for (final CheckType check in RuleRegistry.allChecks) {
+        parser.addFlag(
+          check.name,
+          defaultsTo: check.defaultSeverity != AnalysisSeverity.disabled,
+        );
+      }
+      return parser;
     }
 
     test('returns defaults when no args and empty config', () {
