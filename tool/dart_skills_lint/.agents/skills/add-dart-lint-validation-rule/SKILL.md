@@ -36,25 +36,32 @@ class MyNewRule extends SkillRule {
 
 ### 2. Register the Rule in `lib/src/rule_registry.dart`
 
-Add a new `CheckType` instance to `RuleRegistry.allChecks`. This automatically exposes it as a CLI flag.
+Add a new `CheckType` instance to `RuleRegistry.allChecks` list. This automatically exposes it as a CLI flag.
 
 ```dart
-// lib/src/rule_registry.dart
+// lib/src/rule_registry.dart in allChecks list
 
-static final myNewRuleCheck = CheckType(
-  name: 'my-new-rule',
-  defaultSeverity: AnalysisSeverity.warning, // or error, or disabled
-  help: 'Description of what the rule does for CLI help.',
-  createRule: ({AnalysisSeverity? severity}) => MyNewRule(severity: severity),
-);
+  const CheckType(
+    name: MyNewRule.ruleName,
+    defaultSeverity: MyNewRule.defaultSeverity,
+    help: 'Description of what the rule does for CLI help.',
+  ),
 ```
 
-Add it to the `allChecks` list:
+Then, add a case to `RuleRegistry.createRule` to instantiate your rule:
+
 ```dart
-static List<CheckType> get allChecks => [
+// lib/src/rule_registry.dart in createRule method
+
+  static SkillRule? createRule(String name, AnalysisSeverity severity) {
+    switch (name) {
       // ... other rules
-      myNewRuleCheck,
-    ];
+      case MyNewRule.ruleName:
+        return MyNewRule(severity: severity);
+      default:
+        return null;
+    }
+  }
 ```
 
 ### 3. Handle Disabled by Default Rules (If applicable)

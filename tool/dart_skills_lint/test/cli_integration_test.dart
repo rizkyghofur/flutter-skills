@@ -485,7 +485,7 @@ dart_skills_lint:
 
       final List<String> stderr = await process.stderr.rest.toList();
       final String stderrStr = stderr.join('\n');
-      expect(stderrStr, contains('has 1 trailing spaces'));
+      expect(stderrStr, contains('has 1 trailing space(s)'));
       await process.shouldExit(1);
     });
   });

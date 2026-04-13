@@ -47,7 +47,7 @@ void main() {
 
       final List<ValidationError> errors = await rule.validate(context);
 
-      expect(errors.any((e) => e.message.contains('has 1 trailing spaces')), isTrue);
+      expect(errors.any((e) => e.message.contains('has 1 trailing space(s)')), isTrue);
     });
 
     test('flags line with 3 trailing spaces as warning', () async {
@@ -59,7 +59,7 @@ void main() {
 
       final List<ValidationError> errors = await rule.validate(context);
 
-      expect(errors.any((e) => e.message.contains('has 3 trailing spaces')), isTrue);
+      expect(errors.any((e) => e.message.contains('has 3 trailing space(s)')), isTrue);
     });
 
     test('flags line with trailing tabs as warning', () async {
@@ -97,7 +97,7 @@ void main() {
 
       final List<ValidationError> errors = await rule.validate(context);
 
-      expect(errors.any((e) => e.message.contains('has 1 trailing spaces')), isTrue);
+      expect(errors.any((e) => e.message.contains('has 1 trailing space(s)')), isTrue);
     });
 
     test('flags line containing only whitespace (3 spaces) as warning', () async {
@@ -109,7 +109,7 @@ void main() {
 
       final List<ValidationError> errors = await rule.validate(context);
 
-      expect(errors.any((e) => e.message.contains('has 3 trailing spaces')), isTrue);
+      expect(errors.any((e) => e.message.contains('has 3 trailing space(s)')), isTrue);
     });
 
     test('passes for line containing only 2 spaces', () async {

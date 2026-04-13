@@ -14,6 +14,7 @@ class TrailingWhitespaceRule extends SkillRule {
 
   static const String ruleName = 'check-trailing-whitespace';
   static const AnalysisSeverity defaultSeverity = AnalysisSeverity.disabled;
+  static final RegExp _whitespaceRegExp = RegExp(r'([ \t]+)$');
 
   @override
   String get name => ruleName;
@@ -32,7 +33,7 @@ class TrailingWhitespaceRule extends SkillRule {
       // Remove carriage return if present (Windows line endings)
       final String trimmedLine = line.endsWith('\r') ? line.substring(0, line.length - 1) : line;
 
-      final RegExpMatch? match = RegExp(r'([ \t]+)$').firstMatch(trimmedLine);
+      final RegExpMatch? match = _whitespaceRegExp.firstMatch(trimmedLine);
       if (match != null) {
         final String whitespace = match.group(1)!;
         String? message;
@@ -43,7 +44,7 @@ class TrailingWhitespaceRule extends SkillRule {
           final int spacesCount = whitespace.length;
           if (spacesCount == 1 || spacesCount >= 3) {
             message =
-                'Line ${i + 1} has $spacesCount trailing spaces. Only exactly 2 spaces are allowed for line breaks.';
+                'Line ${i + 1} has $spacesCount trailing space(s). Only exactly 2 spaces are allowed for line breaks.';
           }
         }
 
