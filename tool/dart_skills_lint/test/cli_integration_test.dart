@@ -488,5 +488,75 @@ dart_skills_lint:
       expect(stderrStr, contains('has 1 trailing space(s)'));
       await process.shouldExit(1);
     });
+
+    test('--fix dry-runs and shows diff but does not modify file', () async {
+      final Directory skillDir = await Directory('${tempDir.path}/test-skill').create();
+      await File('${skillDir.path}/SKILL.md')
+          .writeAsString('${buildFrontmatter(name: 'test-skill')}Line with 1 space \n');
+
+      final TestProcess process = await TestProcess.start(
+        'dart',
+        ['bin/cli.dart', '-s', skillDir.path, '--fix', '--check-trailing-whitespace'],
+      );
+
+      final List<String> stdout = await process.stdout.rest.toList();
+      final String stdoutStr = stdout.join('\n');
+      expect(stdoutStr, contains('[Dry Run] Proposed changes for test-skill (SKILL.md):'));
+
+      await process.shouldExit(1);
+
+      // Verify file was not modified
+      final String content = await File('${skillDir.path}/SKILL.md').readAsString();
+      expect(content, contains('Line with 1 space \n'));
+    });
+
+    test('--fix-apply modifies file', () async {
+      final Directory skillDir = await Directory('${tempDir.path}/test-skill').create();
+      await File('${skillDir.path}/SKILL.md')
+          .writeAsString('${buildFrontmatter(name: 'test-skill')}Line with 1 space \n');
+
+      final TestProcess process = await TestProcess.start(
+        'dart',
+        ['bin/cli.dart', '-s', skillDir.path, '--fix-apply', '--check-trailing-whitespace'],
+      );
+
+      final List<String> stdout = await process.stdout.rest.toList();
+      expect(stdout.join('\n'), contains('Applied fixes for test-skill'));
+
+      await process.shouldExit(1);
+
+      // Verify file was modified
+      final String content = await File('${skillDir.path}/SKILL.md').readAsString();
+      expect(content, isNot(contains('Line with 1 space \n')));
+      expect(content, contains('Line with 1 space\n'));
+    });
+
+    test('--fix-apply does not modify file if lint is ignored', () async {
+      final Directory skillDir = await Directory('${tempDir.path}/test-skill').create();
+      await File('${skillDir.path}/SKILL.md')
+          .writeAsString('${buildFrontmatter(name: 'test-skill')}Line with 1 space \n');
+
+      final ignoreFile = File('${tempDir.path}/$defaultIgnoreFileName');
+      await ignoreFile.writeAsString(jsonEncode({
+        SkillsIgnores.skillsKey: {
+          'test-skill': [
+            {
+              IgnoreEntry.ruleIdKey: 'check-trailing-whitespace',
+              IgnoreEntry.fileNameKey: 'SKILL.md'
+            }
+          ]
+        }
+      }));
+
+      final TestProcess process = await TestProcess.start(
+        'dart',
+        ['bin/cli.dart', '-s', skillDir.path, '--fix-apply', '--check-trailing-whitespace'],
+      );
+
+      await process.shouldExit(0);
+
+      final String content = await File('${skillDir.path}/SKILL.md').readAsString();
+      expect(content, contains('Line with 1 space \n'));
+    });
   });
 }

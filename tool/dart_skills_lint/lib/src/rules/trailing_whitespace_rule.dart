@@ -2,6 +2,9 @@
 // for details. All rights reserved. Use of this source code is governed by a
 // BSD-style license that can be found in the LICENSE file.
 
+import 'package:meta/meta.dart';
+
+import '../fixer.dart';
 import '../models/analysis_severity.dart';
 import '../models/skill_context.dart';
 import '../models/skill_rule.dart';
@@ -9,7 +12,7 @@ import '../models/validation_error.dart';
 
 /// Enforces that lines in SKILL.md do not have trailing whitespace,
 /// except for exactly two spaces which indicate a hard line break.
-class TrailingWhitespaceRule extends SkillRule {
+class TrailingWhitespaceRule extends SkillRule implements FixableRule {
   TrailingWhitespaceRule({this.severity = defaultSeverity});
 
   static const String ruleName = 'check-trailing-whitespace';
@@ -60,5 +63,33 @@ class TrailingWhitespaceRule extends SkillRule {
     }
 
     return errors;
+  }
+
+  @override
+  Future<String> fix(String filePath, String currentContent, SkillContext context) async {
+    if (filePath != 'SKILL.md') {
+      return currentContent;
+    }
+
+    return currentContent.split('\n').map(fixLine).join('\n');
+  }
+
+  @visibleForTesting
+  String fixLine(String line) {
+    final bool hasCR = line.endsWith('\r');
+    final String lineWithoutCR = hasCR ? line.substring(0, line.length - 1) : line;
+
+    final RegExpMatch? match = _whitespaceRegExp.firstMatch(lineWithoutCR);
+    if (match == null) {
+      return line;
+    }
+
+    final String whitespace = match.group(1)!;
+    if (whitespace == '  ') {
+      return line; // Keep the 2 space hard line break.
+    }
+
+    final String fixedLine = lineWithoutCR.replaceAll(_whitespaceRegExp, '');
+    return hasCR ? '$fixedLine\r' : fixedLine;
   }
 }

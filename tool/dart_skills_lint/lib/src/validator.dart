@@ -24,7 +24,11 @@ class ValidationResult {
   ValidationResult({
     this.validationErrors = const [],
     List<String> warnings = const [],
+    this.context,
   }) : _manualWarnings = warnings;
+
+  /// The context used during validation.
+  final SkillContext? context;
 
   /// Whether the skill directory is valid according to the specification.
   bool get isValid =>
@@ -151,6 +155,7 @@ class Validator {
 
     return ValidationResult(
       validationErrors: validationErrors,
+      context: context,
     );
   }
 

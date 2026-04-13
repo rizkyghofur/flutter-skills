@@ -123,5 +123,28 @@ void main() {
 
       expect(errors, isEmpty);
     });
+
+    group('Trailing Whitespace Fix', () {
+      test('removes trailing whitespace', () {
+        final rule = TrailingWhitespaceRule();
+
+        expect(rule.fixLine('Line with 1 space '), 'Line with 1 space');
+        expect(rule.fixLine('Line with 3 spaces   '), 'Line with 3 spaces');
+        expect(rule.fixLine('Line with tab\t'), 'Line with tab');
+      });
+
+      test('keeps exactly 2 spaces', () {
+        final rule = TrailingWhitespaceRule();
+
+        expect(rule.fixLine('Line with 2 spaces  '), 'Line with 2 spaces  ');
+      });
+
+      test('handles Windows line endings', () {
+        final rule = TrailingWhitespaceRule();
+
+        expect(rule.fixLine('Line with 1 space \r'), 'Line with 1 space\r');
+        expect(rule.fixLine('Line with 3 spaces   \r'), 'Line with 3 spaces\r');
+      });
+    });
   });
 }
