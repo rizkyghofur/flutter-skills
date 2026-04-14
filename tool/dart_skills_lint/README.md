@@ -74,6 +74,8 @@ If no directory is specified, it automatically checks `.claude/skills` and `.age
 - `--fast-fail`: Halt execution immediately on the error.
 - `--ignore-config`: Ignore the YAML configuration file entirely.
 - `--[no-]check-trailing-whitespace`: Enable/disable checking for trailing whitespace. (Disabled by default).
+- `--fix`: Preview fixes for failing lints (dry run).
+- `--fix-apply`: Apply fixes for failing lints.
 
 ### 2. As a Command Line Tool with a YAML Configuration File
 You can configure the linter using a configuration file (defaulting to `dart_skills_lint.yaml` in the current directory).
