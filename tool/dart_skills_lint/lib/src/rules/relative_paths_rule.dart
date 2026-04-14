@@ -32,7 +32,10 @@ class RelativePathsRule extends SkillRule {
         match != null ? context.rawContent.substring(match.end) : context.rawContent;
 
     for (final RegExpMatch linkMatch in _markdownLinkRegex.allMatches(markdownContent)) {
-      final String path = linkMatch.group(1)!;
+      final String fullPath = linkMatch.group(1)!;
+      // Markdown links can have a title after the URL, separated by spaces.
+      // e.g. [text](url "title")
+      final String path = fullPath.split(RegExp(r'\s+')).first;
 
       // Skip absolute paths (handled by AbsolutePathsRule)
       if (isAbsolute(path) || windows.isAbsolute(path)) {

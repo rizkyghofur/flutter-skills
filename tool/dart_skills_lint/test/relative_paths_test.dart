@@ -84,5 +84,22 @@ void main() {
       expect(result.errors, isEmpty);
       expect(result.warnings, isEmpty); // None of these should trigger local file checks
     });
+
+    test('passes with valid relative image path and title', () async {
+      final Directory skillDir = await Directory('${tempDir.path}/test-skill').create();
+      await File('${skillDir.path}/SKILL.md').writeAsString(
+          '${buildFrontmatter(name: 'test-skill')}![Accessible description](images/screenshot.png "Hover description")\n');
+
+      final Directory imgDir = await Directory('${skillDir.path}/images').create();
+      await File('${imgDir.path}/screenshot.png').writeAsString('image content');
+
+      final validator =
+          Validator(ruleOverrides: {RelativePathsRule.ruleName: AnalysisSeverity.warning});
+      final ValidationResult result = await validator.validate(skillDir);
+
+      expect(result.isValid, isTrue);
+      expect(result.errors, isEmpty);
+      expect(result.warnings, isEmpty);
+    });
   });
 }
