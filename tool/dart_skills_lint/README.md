@@ -30,7 +30,7 @@ Add `dart_skills_lint` to your Dart project or activate it globally.
 Add it to your `pubspec.yaml` (once published on pub.dev):
 ```yaml
 dev_dependencies:
-  dart_skills_lint: ^1.0.0
+  dart_skills_lint: ^0.2.0
 ```
 Then run:
 ```bash
