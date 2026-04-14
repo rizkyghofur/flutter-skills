@@ -63,6 +63,7 @@ Validation ensures that a skill directory and its `SKILL.md` file adhere to the 
 
 #### 4.1.4 Content Constraints
 - **Trailing Whitespace**: Lines in `SKILL.md` should not have trailing whitespace. Exactly 2 spaces at the end of a line are allowed to support Markdown hard line breaks, per the [CommonMark Spec](https://spec.commonmark.org/0.30/#hard-line-breaks).
+- **Path Constraints**: Markdown links must not use absolute paths to enforce portability. Can optionally be configured to check that relative paths point to valid, existing files (disabled by default).
 
 ### 5.2 Scripts & Tools
 - Scripts in the `scripts/` directory should be self-documenting and provide clear error messages.
