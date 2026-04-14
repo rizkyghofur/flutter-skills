@@ -134,5 +134,21 @@ void main() {
       expect(result.errors, isEmpty);
       expect(result.warnings, isEmpty);
     });
+
+    test('passes with leading and trailing whitespace in link', () async {
+      final Directory skillDir = await Directory('${tempDir.path}/test-skill').create();
+      await File('${skillDir.path}/SKILL.md').writeAsString(
+          '${buildFrontmatter(name: 'test-skill')}[Link with whitespace]( styleguide.md )\n');
+
+      await File('${skillDir.path}/styleguide.md').writeAsString('Styleguide content');
+
+      final validator =
+          Validator(ruleOverrides: {RelativePathsRule.ruleName: AnalysisSeverity.warning});
+      final ValidationResult result = await validator.validate(skillDir);
+
+      expect(result.isValid, isTrue);
+      expect(result.errors, isEmpty);
+      expect(result.warnings, isEmpty);
+    });
   });
 }
