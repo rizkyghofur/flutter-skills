@@ -53,21 +53,19 @@ class AbsolutePathsRule extends SkillRule implements FixableRule {
       return currentContent;
     }
 
-    final linkRegex = RegExp(r'\[.*?\]\((.*?)\)');
-    var updatedContent = currentContent;
-
-    for (final RegExpMatch match in linkRegex.allMatches(currentContent)) {
+    return currentContent.replaceAllMapped(_markdownLinkRegex, (match) {
       final String path = match.group(1)!;
       if (isAbsolute(path) || windows.isAbsolute(path)) {
         final file = File(path);
         if (file.existsSync()) {
           final String relativePath = relative(path, from: directory.path);
           final String posixRelativePath = relativePath.replaceAll(r'\', '/');
-          updatedContent = updatedContent.replaceAll('($path)', '($posixRelativePath)');
+          final String fullMatch = match.group(0)!;
+          final int lastParen = fullMatch.lastIndexOf('(');
+          return '${fullMatch.substring(0, lastParen + 1)}$posixRelativePath)';
         }
       }
-    }
-
-    return updatedContent;
+      return match.group(0)!;
+    });
   }
 }
