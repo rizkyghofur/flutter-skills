@@ -9,9 +9,13 @@ class CheckType {
   const CheckType({
     required this.name,
     required this.defaultSeverity,
+    required this.help,
   });
   final String name;
 
   /// The default severity if not overridden by config or flags.
   final AnalysisSeverity defaultSeverity;
+
+  /// The help message displayed by the CLI.
+  final String help;
 }

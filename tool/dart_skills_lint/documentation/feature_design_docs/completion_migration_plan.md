@@ -54,7 +54,7 @@ If we plan to expand this CLI with subcommands in the future (e.g., `dart_skills
      }
    }
    ```
-4. **Update `bin/dart_skills_lint.dart`:**
+4. **Update `bin/cli.dart`:**
    Change `runApp(args)` to instantiate the new runner instead.
 
 ---

@@ -33,7 +33,7 @@ The most significant conflict lies in the allowed characters for project identif
 *   **Pub Package Specification:** Places CLI entry points in the `bin/` directory.
 
 **Result:** To align with the Agent Skills specification, the `SKILL.md` instructions must either:
-1.  Explicitly point the agent to `bin/dart_skills_lint.dart`.
+1.  Explicitly point the agent to `bin/cli.dart`.
 2.  Provide a wrapper script in a `scripts/` directory (e.g., `scripts/run-linter.sh`) that executes the Dart code.
 
 ### 2.5 Metadata Redundancy
@@ -50,7 +50,7 @@ To achieve dual-compatibility, the following configuration is recommended:
 1.  **Directory Name:** Keep the directory named `dart-skills-lint`.
 2.  **SKILL.md:**
     -   Set `name: dart-skills-lint`.
-    -   Provide clear instructions to run `dart bin/dart_skills_lint.dart` or `dart run`.
+    -   Provide clear instructions to run `dart bin/cli.dart` or `dart run`.
 3.  **pubspec.yaml:**
     -   Set `name: dart_skills_lint`.
 4.  **Scripts Wrapper:** Consider adding a `scripts/lint.sh` that calls the Dart linter to satisfy the standard skill directory structure.

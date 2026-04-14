@@ -29,6 +29,20 @@ use GitHub pull requests for this purpose. Consult
 [GitHub Help](https://help.github.com/articles/about-pull-requests/) for more
 information on using pull requests.
 
+## Adding a New Skill
+
+To add a new skill to the repository, follow these steps. Note that both generation and validation require the `GEMINI_API_KEY` environment variable to be set.
+
+1. **Define the Skill**: Add a new entry to the `resources/flutter_skills.yaml` file. Follow the style of existing entries (use short descriptions and summarized instructions).
+2. **Generate the Skill**: Run the generation tool from the repository root:
+   ```bash
+   dart run tool/generator/bin/skills.dart generate-skill --skill <skill-name> -d tool/dart_skills_lint/skills resources/flutter_skills.yaml
+   ```
+3. **Validate the Skill**: Run the validation tool to ensure it meets the standards:
+   ```bash
+   dart run tool/generator/bin/skills.dart validate-skill --skill <skill-name> -d tool/dart_skills_lint/skills resources/flutter_skills.yaml
+   ```
+
 ## Issue triage
 
 We regularly triage issues by looking at newly filed issues and determining what we should do about each of them. Triage issues as follows:

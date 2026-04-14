@@ -61,6 +61,10 @@ Validation ensures that a skill directory and its `SKILL.md` file adhere to the 
 - **Compatibility (`compatibility`)**:
   - Length: Maximum 500 characters.
 
+#### 4.1.4 Content Constraints
+- **Trailing Whitespace**: Lines in `SKILL.md` should not have trailing whitespace. Exactly 2 spaces at the end of a line are allowed to support Markdown hard line breaks, per the [CommonMark Spec](https://spec.commonmark.org/0.31.2/#hard-line-breaks).
+- **Path Constraints**: **Inline** Markdown links must not use absolute paths to enforce portability. Can optionally be configured to check that relative paths point to valid, existing files (disabled by default). *Note: Validation only applies to inline Markdown links; HTML and reference-style links are not supported.*
+
 ### 5.2 Scripts & Tools
 - Scripts in the `scripts/` directory should be self-documenting and provide clear error messages.
 

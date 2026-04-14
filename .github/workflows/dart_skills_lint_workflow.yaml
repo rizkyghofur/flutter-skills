@@ -50,7 +50,7 @@ jobs:
       - run: dart pub get
 
       - name: Validate skills
-        run: dart run dart_skills_lint
+        run: dart run dart_skills_lint:cli
 
   formatting:
     runs-on: ubuntu-latest

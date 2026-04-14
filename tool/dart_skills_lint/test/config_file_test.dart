@@ -40,7 +40,7 @@ dart_skills_lint:
 
       final TestProcess process = await TestProcess.start(
         'dart',
-        [p.normalize(p.absolute('bin/dart_skills_lint.dart')), '-s', 'test-skill'],
+        [p.normalize(p.absolute('bin/cli.dart')), '-s', 'test-skill'],
         workingDirectory: tempDir.path,
       );
 
@@ -66,7 +66,7 @@ dart_skills_lint:
 
       final TestProcess process = await TestProcess.start(
         'dart',
-        [p.normalize(p.absolute('bin/dart_skills_lint.dart')), '-s', 'test-skill'],
+        [p.normalize(p.absolute('bin/cli.dart')), '-s', 'test-skill'],
         workingDirectory: tempDir.path,
       );
 
@@ -92,18 +92,13 @@ dart_skills_lint:
 
       final TestProcess process = await TestProcess.start(
         'dart',
-        [
-          p.normalize(p.absolute('bin/dart_skills_lint.dart')),
-          '-s',
-          'test-skill',
-          '--check-relative-paths'
-        ],
+        [p.normalize(p.absolute('bin/cli.dart')), '-s', 'test-skill', '--check-relative-paths'],
         workingDirectory: tempDir.path,
       );
 
-      final List<String> stdout = await process.stdout.rest.toList();
-      expect(stdout.join('\n'), contains('Warnings:'));
-      await process.shouldExit(0);
+      final List<String> stderr = await process.stderr.rest.toList();
+      expect(stderr.join('\n'), contains('Skill is invalid:'));
+      await process.shouldExit(1);
     });
 
     test('writes empty ignore-file if missing and specified in config', () async {
@@ -125,7 +120,7 @@ dart_skills_lint:
 
       final TestProcess process = await TestProcess.start(
         'dart',
-        [p.normalize(p.absolute('bin/dart_skills_lint.dart')), '-s', 'test-skill'],
+        [p.normalize(p.absolute('bin/cli.dart')), '-s', 'test-skill'],
         workingDirectory: tempDir.path,
       );
 
@@ -158,7 +153,7 @@ dart_skills_lint:
       // 1. Run without --ignore-config. Should pass because config disables the check.
       final TestProcess passProcess = await TestProcess.start(
         'dart',
-        [p.normalize(p.absolute('bin/dart_skills_lint.dart')), '-s', 'TEST-SKILL'],
+        [p.normalize(p.absolute('bin/cli.dart')), '-s', 'TEST-SKILL'],
         workingDirectory: tempDir.path,
       );
       await passProcess.shouldExit(0);
@@ -166,12 +161,7 @@ dart_skills_lint:
       // 2. Run with --ignore-config. Should fail because config is ignored and default is used.
       final TestProcess failProcess = await TestProcess.start(
         'dart',
-        [
-          p.normalize(p.absolute('bin/dart_skills_lint.dart')),
-          '-s',
-          'TEST-SKILL',
-          '--ignore-config'
-        ],
+        [p.normalize(p.absolute('bin/cli.dart')), '-s', 'TEST-SKILL', '--ignore-config'],
         workingDirectory: tempDir.path,
       );
       await failProcess.shouldExit(1);
@@ -197,7 +187,7 @@ dart_skills_lint:
       final TestProcess genProcess = await TestProcess.start(
         'dart',
         [
-          p.normalize(p.absolute('bin/dart_skills_lint.dart')),
+          p.normalize(p.absolute('bin/cli.dart')),
           '-s',
           'TEST-SKILL',
           '--generate-baseline',

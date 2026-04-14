@@ -30,9 +30,17 @@ AnalysisSeverity _parseSeverity(String value) {
   return AnalysisSeverity.disabled; // Default if unknown
 }
 
-/// Configuration for a specific directory.
+/// Configuration for a specific directory containing skills.
+///
+/// Allows overriding rules and specifying a custom ignore file for skills
+/// located within this directory.
 class DirectoryConfig {
   DirectoryConfig({required this.path, required this.rules, this.ignoreFile});
+
+  /// The path to the directory containing skills.
+  ///
+  /// Can be absolute or relative to the current working directory.
+  /// Supports tilde expansion (e.g., `~/...`).
   final String path;
   final Map<String, AnalysisSeverity> rules;
   final String? ignoreFile;

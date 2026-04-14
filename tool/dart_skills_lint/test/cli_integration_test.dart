@@ -6,7 +6,11 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:dart_skills_lint/src/entry_point.dart';
+import 'package:dart_skills_lint/src/models/check_type.dart';
+import 'package:dart_skills_lint/src/models/ignore_entry.dart';
 import 'package:dart_skills_lint/src/models/skills_ignores.dart';
+import 'package:dart_skills_lint/src/rule_registry.dart';
+import 'package:dart_skills_lint/src/validator.dart';
 import 'package:path/path.dart' as p;
 import 'package:test/test.dart';
 import 'package:test_process/test_process.dart';
@@ -35,7 +39,7 @@ void main() {
       // Run with --generate-baseline
       final TestProcess process = await TestProcess.start(
         'dart',
-        ['bin/dart_skills_lint.dart', '-s', skillDir.path, '--generate-baseline'],
+        ['bin/cli.dart', '-s', skillDir.path, '--generate-baseline'],
       );
       await process.shouldExit(0);
 
@@ -78,12 +82,7 @@ dart_skills_lint:
       // 1. Run with --generate-baseline. It should evaluate all skills and write both to the baseline!
       final TestProcess genProcess = await TestProcess.start(
         'dart',
-        [
-          p.normalize(p.absolute('bin/dart_skills_lint.dart')),
-          '-d',
-          'skills',
-          '--generate-baseline'
-        ],
+        [p.normalize(p.absolute('bin/cli.dart')), '-d', 'skills', '--generate-baseline'],
         workingDirectory: tempDir.path,
       );
       await genProcess.shouldExit(0); // Exits 0 if --generate-baseline is passed
@@ -101,7 +100,7 @@ dart_skills_lint:
       // 2. Run again silently. It should succeed with exit 0 because all errors are ignored!
       final TestProcess runProcess = await TestProcess.start(
         'dart',
-        [p.normalize(p.absolute('bin/dart_skills_lint.dart')), '-d', 'skills', '-q'],
+        [p.normalize(p.absolute('bin/cli.dart')), '-d', 'skills', '-q'],
         workingDirectory: tempDir.path,
       );
       await runProcess.shouldExit(0);
@@ -114,7 +113,7 @@ dart_skills_lint:
 
       final TestProcess process = await TestProcess.start(
         'dart',
-        ['bin/dart_skills_lint.dart', '-s', skillDir.path],
+        ['bin/cli.dart', '-s', skillDir.path],
       );
 
       final List<String> stdout = await process.stdout.rest.toList();
@@ -128,7 +127,7 @@ dart_skills_lint:
 
       final TestProcess process = await TestProcess.start(
         'dart',
-        ['bin/dart_skills_lint.dart', '-s', skillDir.path],
+        ['bin/cli.dart', '-s', skillDir.path],
       );
 
       final List<String> stderr = await process.stderr.rest.toList();
@@ -150,7 +149,7 @@ dart_skills_lint:
 
       final TestProcess process = await TestProcess.start(
         'dart',
-        ['bin/dart_skills_lint.dart', '-d', skillsDir.path],
+        ['bin/cli.dart', '-d', skillsDir.path],
       );
 
       // Verify outputs for both skills (sorted order)
@@ -176,7 +175,7 @@ dart_skills_lint:
 
       final TestProcess process = await TestProcess.start(
         'dart',
-        ['bin/dart_skills_lint.dart', '-d', skillsDir.path],
+        ['bin/cli.dart', '-d', skillsDir.path],
       );
 
       final List<String> stdout = await process.stdout.rest.toList();
@@ -198,7 +197,7 @@ dart_skills_lint:
 
       final TestProcess process = await TestProcess.start(
         'dart',
-        ['bin/dart_skills_lint.dart', '-d', skillsDir.path],
+        ['bin/cli.dart', '-d', skillsDir.path],
       );
 
       // Verify outputs
@@ -225,7 +224,7 @@ dart_skills_lint:
 
       final TestProcess process = await TestProcess.start(
         'dart',
-        ['bin/dart_skills_lint.dart', '-d', skillsDir.path, '--fast-fail'],
+        ['bin/cli.dart', '-d', skillsDir.path, '--fast-fail'],
       );
 
       // Verify outputs for skill-a
@@ -248,7 +247,7 @@ dart_skills_lint:
 
       final TestProcess process = await TestProcess.start(
         'dart',
-        ['bin/dart_skills_lint.dart', '-s', skillDir.path, '--quiet'],
+        ['bin/cli.dart', '-s', skillDir.path, '--quiet'],
       );
 
       await process.shouldExit(0);
@@ -260,7 +259,7 @@ dart_skills_lint:
     test('fails with 64 when no flags passed and both defaults are missing', () async {
       final TestProcess process = await TestProcess.start(
         'dart',
-        [p.normalize(p.absolute('bin/dart_skills_lint.dart'))],
+        [p.normalize(p.absolute('bin/cli.dart'))],
         workingDirectory: tempDir.path,
       );
 
@@ -278,7 +277,7 @@ dart_skills_lint:
 
       final TestProcess process = await TestProcess.start(
         'dart',
-        [p.normalize(p.absolute('bin/dart_skills_lint.dart'))],
+        [p.normalize(p.absolute('bin/cli.dart'))],
         workingDirectory: tempDir.path,
       );
 
@@ -293,7 +292,7 @@ dart_skills_lint:
 
       final TestProcess process = await TestProcess.start(
         'dart',
-        [p.normalize(p.absolute('bin/dart_skills_lint.dart')), '-s', '~/some-skill'],
+        [p.normalize(p.absolute('bin/cli.dart')), '-s', '~/some-skill'],
         environment: {'HOME': tempDir.path},
       );
 
@@ -309,14 +308,14 @@ dart_skills_lint:
       // 1. Run normally. Should fail because valid-yaml-metadata defaults to true (error).
       final TestProcess process = await TestProcess.start(
         'dart',
-        ['bin/dart_skills_lint.dart', '-s', skillDir.path],
+        ['bin/cli.dart', '-s', skillDir.path],
       );
       await process.shouldExit(1);
 
       // 2. Run with --no-valid-yaml-metadata. Should pass because the check is disabled!
       final TestProcess noYamlProcess = await TestProcess.start(
         'dart',
-        ['bin/dart_skills_lint.dart', '-s', skillDir.path, '--no-valid-yaml-metadata'],
+        ['bin/cli.dart', '-s', skillDir.path, '--no-valid-yaml-metadata'],
       );
       await noYamlProcess.shouldExit(0);
     });
@@ -326,7 +325,7 @@ dart_skills_lint:
 
       final TestProcess process = await TestProcess.start(
         'dart',
-        ['bin/dart_skills_lint.dart', '-d', emptyDir.path],
+        ['bin/cli.dart', '-d', emptyDir.path],
       );
 
       await process.shouldExit(1);
@@ -342,7 +341,7 @@ dart_skills_lint:
 
       final TestProcess process = await TestProcess.start(
         'dart',
-        ['bin/dart_skills_lint.dart', '-d', skillAsRoot.path],
+        ['bin/cli.dart', '-d', skillAsRoot.path],
       );
 
       await process.shouldExit(1);
@@ -364,7 +363,7 @@ dart_skills_lint:
 
       final TestProcess process = await TestProcess.start(
         'dart',
-        ['bin/dart_skills_lint.dart', '-s', skill1.path, '-s', skill2.path],
+        ['bin/cli.dart', '-s', skill1.path, '-s', skill2.path],
       );
 
       await process.shouldExit(0);
@@ -384,12 +383,209 @@ dart_skills_lint:
 
       final TestProcess process = await TestProcess.start(
         'dart',
-        ['bin/dart_skills_lint.dart', '-s', skillFolder.path, '--ignore-file', malformedFile.path],
+        ['bin/cli.dart', '-s', skillFolder.path, '--ignore-file', malformedFile.path],
       );
 
       await process.shouldExit(0); // Valid skill should still pass
       final List<String> stdout = await process.stdout.rest.toList();
       expect(stdout.join('\n'), contains('Evaluating directory:'));
+    });
+
+    test('CLI help displays all registered rules', () async {
+      final TestProcess process = await TestProcess.start(
+        'dart',
+        [p.normalize(p.absolute('bin/cli.dart')), '--help'],
+      );
+      await process.shouldExit(0);
+      final List<String> stdout = await process.stdout.rest.toList();
+      final String stdoutStr = stdout.join('\n');
+
+      for (final CheckType check in RuleRegistry.allChecks) {
+        expect(stdoutStr, contains(check.name));
+      }
+    });
+
+    test('CLI help does not display path-does-not-exist', () async {
+      final TestProcess process = await TestProcess.start(
+        'dart',
+        [p.normalize(p.absolute('bin/cli.dart')), '--help'],
+      );
+      await process.shouldExit(0);
+      final List<String> stdout = await process.stdout.rest.toList();
+      final String stdoutStr = stdout.join('\n');
+
+      expect(stdoutStr, isNot(contains(Validator.pathDoesNotExist)));
+    });
+
+    test('ignores directory missing SKILL.md if listed in ignore file', () async {
+      final Directory skillsDir = await Directory('${tempDir.path}/skills').create();
+
+      // Create a valid skill
+      final Directory skillDir = await Directory('${skillsDir.path}/valid-skill').create();
+      await File('${skillDir.path}/SKILL.md')
+          .writeAsString('---\nname: valid-skill\ndescription: A valid skill\n---\nBody');
+
+      // Create a non-skill directory
+      await Directory('${skillsDir.path}/contributing').create();
+
+      // Create ignore file
+      final ignoreFile = File('${tempDir.path}/$defaultIgnoreFileName');
+      await ignoreFile.writeAsString(jsonEncode({
+        SkillsIgnores.skillsKey: {
+          'contributing': [
+            {
+              IgnoreEntry.ruleIdKey: Validator.pathDoesNotExist,
+              IgnoreEntry.fileNameKey: 'skills/contributing'
+            }
+          ]
+        }
+      }));
+
+      final configFile = File('${tempDir.path}/dart_skills_lint.yaml');
+      await configFile.writeAsString('''
+dart_skills_lint:
+  directories:
+    - path: "skills"
+      ignore_file: "$defaultIgnoreFileName"
+''');
+
+      final TestProcess process = await TestProcess.start(
+        'dart',
+        [p.normalize(p.absolute('bin/cli.dart')), '-d', 'skills'],
+        workingDirectory: tempDir.path,
+      );
+
+      await process.shouldExit(0);
+
+      final List<String> stdout = await process.stdout.rest.toList();
+      final String stdoutStr = stdout.join('\n');
+      expect(stdoutStr, contains('--- Validating skill: valid-skill ---'));
+      expect(stdoutStr, contains('--- Validating skill: contributing ---'));
+    });
+
+    test('CLI reports trailing whitespace as error when enabled via config', () async {
+      final Directory skillDir = await Directory('${tempDir.path}/test-skill').create();
+      await File('${skillDir.path}/SKILL.md')
+          .writeAsString('${buildFrontmatter(name: 'test-skill')}Line with 1 space \n');
+
+      final configFile = File('${tempDir.path}/dart_skills_lint.yaml');
+      await configFile.writeAsString('''
+dart_skills_lint:
+  directories:
+    - path: "test-skill"
+      rules:
+        check-trailing-whitespace: error
+''');
+
+      final TestProcess process = await TestProcess.start(
+        'dart',
+        [p.normalize(p.absolute('bin/cli.dart')), '-s', 'test-skill'],
+        workingDirectory: tempDir.path,
+      );
+
+      final List<String> stderr = await process.stderr.rest.toList();
+      final String stderrStr = stderr.join('\n');
+      expect(stderrStr, contains('has 1 trailing space(s)'));
+      await process.shouldExit(1);
+    });
+
+    test('--fix dry-runs and shows diff but does not modify file', () async {
+      final Directory skillDir = await Directory('${tempDir.path}/test-skill').create();
+      await File('${skillDir.path}/SKILL.md')
+          .writeAsString('${buildFrontmatter(name: 'test-skill')}Line with 1 space \n');
+
+      final TestProcess process = await TestProcess.start(
+        'dart',
+        ['bin/cli.dart', '-s', skillDir.path, '--fix', '--check-trailing-whitespace'],
+      );
+
+      final List<String> stdout = await process.stdout.rest.toList();
+      final String stdoutStr = stdout.join('\n');
+      expect(stdoutStr, contains('[Dry Run] Proposed changes for test-skill (SKILL.md):'));
+
+      await process.shouldExit(1);
+
+      // Verify file was not modified
+      final String content = await File('${skillDir.path}/SKILL.md').readAsString();
+      expect(content, contains('Line with 1 space \n'));
+    });
+
+    test('--fix-apply modifies file', () async {
+      final Directory skillDir = await Directory('${tempDir.path}/test-skill').create();
+      await File('${skillDir.path}/SKILL.md')
+          .writeAsString('${buildFrontmatter(name: 'test-skill')}Line with 1 space \n');
+
+      final TestProcess process = await TestProcess.start(
+        'dart',
+        ['bin/cli.dart', '-s', skillDir.path, '--fix-apply', '--check-trailing-whitespace'],
+      );
+
+      final List<String> stdout = await process.stdout.rest.toList();
+      expect(stdout.join('\n'), contains('Applied fixes for test-skill'));
+
+      await process.shouldExit(0);
+
+      // Verify file was modified
+      final String content = await File('${skillDir.path}/SKILL.md').readAsString();
+      expect(content, isNot(contains('Line with 1 space \n')));
+      expect(content, contains('Line with 1 space\n'));
+    });
+
+    test('--fix-apply does not modify file if lint is ignored', () async {
+      final Directory skillDir = await Directory('${tempDir.path}/test-skill').create();
+      await File('${skillDir.path}/SKILL.md')
+          .writeAsString('${buildFrontmatter(name: 'test-skill')}Line with 1 space \n');
+
+      final ignoreFile = File('${tempDir.path}/$defaultIgnoreFileName');
+      await ignoreFile.writeAsString(jsonEncode({
+        SkillsIgnores.skillsKey: {
+          'test-skill': [
+            {
+              IgnoreEntry.ruleIdKey: 'check-trailing-whitespace',
+              IgnoreEntry.fileNameKey: 'SKILL.md'
+            }
+          ]
+        }
+      }));
+
+      final TestProcess process = await TestProcess.start(
+        'dart',
+        ['bin/cli.dart', '-s', skillDir.path, '--fix-apply', '--check-trailing-whitespace'],
+      );
+
+      await process.shouldExit(0);
+
+      final String content = await File('${skillDir.path}/SKILL.md').readAsString();
+      expect(content, contains('Line with 1 space \n'));
+    });
+
+    test('--fix-apply does not modify file if invalid-skill-name is ignored', () async {
+      final Directory skillDir = await Directory('${tempDir.path}/my_skill').create();
+      await File('${skillDir.path}/SKILL.md').writeAsString('''
+---
+name: wrong-name
+description: A test skill
+---
+Body''');
+
+      final ignoreFile = File('${tempDir.path}/$defaultIgnoreFileName');
+      await ignoreFile.writeAsString(jsonEncode({
+        SkillsIgnores.skillsKey: {
+          'my_skill': [
+            {IgnoreEntry.ruleIdKey: 'invalid-skill-name', IgnoreEntry.fileNameKey: 'SKILL.md'}
+          ]
+        }
+      }));
+
+      final TestProcess process = await TestProcess.start(
+        'dart',
+        ['bin/cli.dart', '-s', skillDir.path, '--fix-apply'],
+      );
+
+      await process.shouldExit(0);
+
+      final String content = await File('${skillDir.path}/SKILL.md').readAsString();
+      expect(content, contains('name: wrong-name'));
     });
   });
 }

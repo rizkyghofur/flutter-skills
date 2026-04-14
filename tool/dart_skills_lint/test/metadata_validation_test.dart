@@ -5,7 +5,7 @@
 import 'dart:io';
 
 import 'package:dart_skills_lint/src/models/validation_error.dart';
-import 'package:dart_skills_lint/src/rules.dart';
+import 'package:dart_skills_lint/src/rules/disallowed_field_rule.dart';
 import 'package:dart_skills_lint/src/validator.dart';
 import 'package:test/test.dart';
 
@@ -82,7 +82,7 @@ Body''');
       expect(result.warnings, isEmpty);
 
       final Iterable<ValidationError> disallowedErrors =
-          result.validationErrors.where((e) => e.ruleId == disallowedFieldCheck.name);
+          result.validationErrors.where((e) => e.ruleId == DisallowedFieldRule.ruleName);
       expect(disallowedErrors, isEmpty);
     });
 
