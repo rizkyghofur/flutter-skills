@@ -17,6 +17,9 @@ const _directoriesKey = 'directories';
 const _pathKey = 'path';
 const _ignoreFileKey = 'ignore_file';
 
+const Set<String> _allowedTopLevelKeys = {_rulesKey, _directoriesKey};
+const Set<String> _allowedDirectoryKeys = {_pathKey, _rulesKey, _ignoreFileKey};
+
 AnalysisSeverity _parseSeverity(String value) {
   if (value == 'error') {
     return AnalysisSeverity.error;
@@ -48,9 +51,14 @@ class DirectoryConfig {
 
 /// Structured configuration for the linter.
 class Configuration {
-  Configuration({this.directoryConfigs = const [], this.configuredRules = const {}});
+  Configuration({
+    this.directoryConfigs = const [],
+    this.configuredRules = const {},
+    this.parsingErrors = const [],
+  });
   final List<DirectoryConfig> directoryConfigs;
   final Map<String, AnalysisSeverity> configuredRules;
+  final List<String> parsingErrors;
 }
 
 /// Reads dart_skills_lint.yaml from the current directory and returns the configuration.
@@ -66,6 +74,16 @@ Future<Configuration> loadConfig() async {
     if (yaml is YamlMap && yaml.containsKey(_dartSkillsLintKey)) {
       final toolConfig = yaml[_dartSkillsLintKey];
       if (toolConfig is YamlMap) {
+        final parsingErrors = <String>[];
+
+        // Validate top-level keys
+        for (final key in toolConfig.keys) {
+          if (!_allowedTopLevelKeys.contains(key.toString())) {
+            parsingErrors
+                .add('Unrecognized top-level key "$key" in dart_skills_lint configuration.');
+          }
+        }
+
         final configuredRules = <String, AnalysisSeverity>{};
         if (toolConfig.containsKey(_rulesKey)) {
           final rules = toolConfig[_rulesKey];
@@ -83,6 +101,14 @@ Future<Configuration> loadConfig() async {
             for (final dir in dirs) {
               if (dir is YamlMap && dir.containsKey(_pathKey)) {
                 final path = dir[_pathKey] as String;
+
+                // Validate directory keys
+                for (final key in dir.keys) {
+                  if (!_allowedDirectoryKeys.contains(key.toString())) {
+                    parsingErrors.add('Unrecognized key "$key" in directory entry for "$path".');
+                  }
+                }
+
                 final rules = <String, AnalysisSeverity>{};
                 if (dir.containsKey(_rulesKey)) {
                   final localRules = dir[_rulesKey];
@@ -99,7 +125,11 @@ Future<Configuration> loadConfig() async {
             }
           }
         }
-        return Configuration(directoryConfigs: directoryConfigs, configuredRules: configuredRules);
+        return Configuration(
+          directoryConfigs: directoryConfigs,
+          configuredRules: configuredRules,
+          parsingErrors: parsingErrors,
+        );
       }
     }
   } catch (e) {

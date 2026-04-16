@@ -203,5 +203,85 @@ dart_skills_lint:
       final String content = await ignoreFile.readAsString();
       expect(content, contains('invalid-skill-name')); // It should generate baseline for it!
     });
+
+    test('fails on invalid top-level key in config by default', () async {
+      await Directory('${tempDir.path}/test-skill').create();
+      await File('${tempDir.path}/test-skill/SKILL.md').writeAsString('''
+---
+name: test-skill
+description: A test skill
+---
+Body''');
+
+      await File('${tempDir.path}/dart_skills_lint.yaml').writeAsString('''
+dart_skills_lint:
+  invalid-key: value
+''');
+
+      final TestProcess process = await TestProcess.start(
+        'dart',
+        [p.normalize(p.absolute('bin/cli.dart')), '-s', 'test-skill'],
+        workingDirectory: tempDir.path,
+      );
+
+      final List<String> stderr = await process.stderr.rest.toList();
+      expect(stderr.join('\n'),
+          contains('Configuration error: Unrecognized top-level key "invalid-key"'));
+      await process.shouldExit(1);
+    });
+
+    test('fails on invalid directory key in config by default', () async {
+      await Directory('${tempDir.path}/test-skill').create();
+      await File('${tempDir.path}/test-skill/SKILL.md').writeAsString('''
+---
+name: test-skill
+description: A test skill
+---
+Body''');
+
+      await File('${tempDir.path}/dart_skills_lint.yaml').writeAsString('''
+dart_skills_lint:
+  directories:
+    - path: "test-skill"
+      invalid-dir-key: value
+''');
+
+      final TestProcess process = await TestProcess.start(
+        'dart',
+        [p.normalize(p.absolute('bin/cli.dart')), '-s', 'test-skill'],
+        workingDirectory: tempDir.path,
+      );
+
+      final List<String> stderr = await process.stderr.rest.toList();
+      expect(
+          stderr.join('\n'), contains('Configuration error: Unrecognized key "invalid-dir-key"'));
+      await process.shouldExit(1);
+    });
+
+    test('succeeds with warning on invalid key when --allow-misconfigured-keys passed', () async {
+      await Directory('${tempDir.path}/test-skill').create();
+      await File('${tempDir.path}/test-skill/SKILL.md').writeAsString('''
+---
+name: test-skill
+description: A test skill
+---
+Body''');
+
+      await File('${tempDir.path}/dart_skills_lint.yaml').writeAsString('''
+dart_skills_lint:
+  invalid-key: value
+''');
+
+      final TestProcess process = await TestProcess.start(
+        'dart',
+        [p.normalize(p.absolute('bin/cli.dart')), '-s', 'test-skill', '--allow-misconfigured-keys'],
+        workingDirectory: tempDir.path,
+      );
+
+      final List<String> stdout = await process.stdout.rest.toList();
+      expect(stdout.join('\n'),
+          contains('Configuration warning: Unrecognized top-level key "invalid-key"'));
+      await process.shouldExit(0);
+    });
   });
 }

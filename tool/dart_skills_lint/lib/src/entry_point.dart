@@ -35,6 +35,7 @@ const _ignoreConfigFlag = 'ignore-config';
 const _generateBaselineFlag = 'generate-baseline';
 const _fixFlag = 'fix';
 const _fixApplyFlag = 'fix-apply';
+const _allowMisconfiguredKeysFlag = 'allow-misconfigured-keys';
 
 @visibleForTesting
 const defaultIgnoreFileName = 'dart_skills_lint_ignore.json';
@@ -98,7 +99,9 @@ Future<void> runApp(List<String> args) async {
     ..addFlag(_ignoreConfigFlag,
         negatable: false, help: 'Ignore the YAML configuration file entirely.')
     ..addFlag(_fixFlag, negatable: false, help: 'Preview fixes for failing lints (dry run).')
-    ..addFlag(_fixApplyFlag, negatable: false, help: 'Apply fixes for failing lints.');
+    ..addFlag(_fixApplyFlag, negatable: false, help: 'Apply fixes for failing lints.')
+    ..addFlag(_allowMisconfiguredKeysFlag,
+        negatable: false, hide: true, help: 'Allow misconfigured keys in dart_skills_lint.yaml.');
 
   final ArgResults results;
   try {
@@ -117,6 +120,22 @@ Future<void> runApp(List<String> args) async {
   final Configuration config = ignoreConfig ? Configuration() : await loadConfig();
   if (ignoreConfig && !(results[_quietFlag] as bool)) {
     _log.info('Ignoring configuration file due to $_ignoreConfigFlag flag');
+  }
+
+  if (config.parsingErrors.isNotEmpty) {
+    final allowMisconfiguredKeys = results[_allowMisconfiguredKeysFlag] as bool;
+    if (allowMisconfiguredKeys) {
+      for (final String error in config.parsingErrors) {
+        _log.warning('Configuration warning: $error');
+      }
+    } else {
+      for (final String error in config.parsingErrors) {
+        _log.severe('Configuration error: $error');
+      }
+      _log.severe('Use --$_allowMisconfiguredKeysFlag to ignore these errors.');
+      exitCode = 1;
+      return;
+    }
   }
 
   var skillDirPaths = results[_skillsDirectoryFlag] as List<String>;
