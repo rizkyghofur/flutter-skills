@@ -404,3 +404,22 @@
     - https://docs.flutter.dev/cookbook/networking/send-data
     - https://docs.flutter.dev/cookbook/networking/update-data
     - https://docs.flutter.dev/get-started/fundamentals/networking
+- name: flutter-implement-json-serialization
+  description: Create model classes with `fromJson` and `toJson` methods using
+    `dart:convert`. Use when manually mapping JSON keys to class properties for
+    simple data structures.
+  instructions: |
+    1.  **Import the `dart:convert` library**: Flutter includes a built-in `dart:convert` library that provides a straightforward JSON encoder and decoder. This library allows you to serialize JSON manually.
+    2.  **Define a model class**: Create a plain model class, for example, named `User`. This class will contain the properties that correspond to your JSON structure.
+    3.  **Implement a `fromJson` constructor**: Inside your model class, create a factory constructor, such as `User.fromJson()`, which takes a `Map` structure as input. This constructor is responsible for constructing a new instance of your model class from the JSON map. For example, if you receive a 200 OK response from a server, you can parse the JSON using `jsonDecode(response.body) as Map<String, dynamic>` and then pass it to your `fromJson` constructor.
+    4.  **Implement a `toJson` method**: Add a `toJson()` method to your model class. This method converts an instance of your model class into a `Map`.
+    5.  **Benefits of this approach**: Using model classes with `fromJson` and `toJson` methods provides type safety, autocompletion for fields, and compile-time exceptions. This helps combat issues like typos or incorrect type usage that would otherwise lead to runtime crashes.
+    6.  **Considerations for `jsonDecode()`**: When using `jsonDecode()`, it returns a `dynamic` type, meaning the types of values are not known until runtime.
+    7.  **Testing**: In a production application, it is important to ensure that serialization works correctly by having unit tests in place for both the `User.fromJson()` and `User.toJson()` methods.
+  resources:
+    - https://docs.flutter.dev/cookbook/networking/background-parsing
+    - https://docs.flutter.dev/cookbook/networking/fetch-data
+    - https://docs.flutter.dev/cookbook/networking/send-data
+    - https://docs.flutter.dev/cookbook/networking/update-data
+    - https://docs.flutter.dev/data-and-backend/serialization
+    - https://docs.flutter.dev/data-and-backend/serialization/json
