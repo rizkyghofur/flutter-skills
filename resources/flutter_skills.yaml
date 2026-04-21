@@ -53,3 +53,47 @@
   - https://docs.flutter.dev/testing/integration-tests
   - https://docs.flutter.dev/testing/plugins-in-tests
   - https://docs.flutter.dev/testing/testing-plugins
+- name: flutter-fix-layout-issues
+  description: Fixes Flutter layout errors (overflows, unbounded constraints)
+    using Dart and Flutter MCP tools. Use when addressing "RenderFlex overflowed",
+    "Vertical viewport was given unbounded height", or similar layout issues.
+  instructions: |
+    1.  **Identify the Layout Error:**
+        *   Recognize common Flutter framework errors, including layout errors.
+        *   Look for specific error messages such as "RenderFlex overflowed", "Vertical viewport was given unbounded height", "An InputDecorator...cannot have an unbounded width", or "RenderBox was not laid out".
+        *   A solid red or grey screen can also indicate an error.
+
+    2.  **Understand the Cause of the Error:**
+        *   **"Vertical viewport was given unbounded height"**: This error often occurs when a scrollable widget, like a `ListView` or `GridView`, is placed inside a `Column`. `ListView`s take all available vertical space unless constrained by a parent, and `Column`s don't impose height constraints on their children by default, leading to an inability to determine the `ListView`'s size.
+        *   **Unbounded Width Errors (e.g., `InputDecorator` or `TextField`)**: This happens when a `Row` contains a `TextFormField` or `TextField` without a width constraint. Similarly, a `Column` might try to be wider than its parent `Row` can allocate, causing an overflow. This is due to Flutter's layout process where parents pass down constraints, and children respond by passing up a size within those constraints. If a child, like a `Text` widget, determines its own width based on its content, and its parent (`Column`) adopts that width, it can clash with the parent's (`Row`) maximum horizontal space.
+        *   **"RenderBox was not laid out"**: This error is often a side effect of a primary error earlier in the rendering pipeline. It usually relates to violations of box constraints, meaning Flutter needs more information on how to constrain the widgets.
+        *   **"Incorrect use of ParentData widget"**: This error indicates that a `ParentDataWidget` is not placed directly inside a compatible ancestor widget. Certain widgets, like `Flexible` and `Expanded`, expect specific parent widgets such as `Row`, `Column`, or `Flex`. `Positioned` expects a `Stack`, and `TableCell` expects a `Table`.
+
+    3.  **Apply the Appropriate Fix:**
+        *   **For "Vertical viewport was given unbounded height" (ListView in Column)**:
+            *   Specify the height of the `ListView`.
+            *   Wrap the `ListView` in an `Expanded` widget to make it take the remaining space in the `Column`.
+            *   Alternatively, use a `SizedBox` for an absolute height or a `Flexible` widget for a relative height.
+        *   **For unbounded width errors (e.g., `TextField` in `Row` or `Column` in `Row`)**:
+            *   Constrain the width of the widget (e.g., `InputDecorator`, `TextField`, or `Column`).
+            *   Wrap the widget in an `Expanded` widget.
+            *   Wrap the widget in a `Flexible` widget and specify a flex factor. An `Expanded` widget is equivalent to a `Flexible` widget with a flex factor of 1.0.
+        *   **For "RenderBox was not laid out"**: The solution involves providing more information to Flutter about how to constrain the widgets. Understanding how constraints work in Flutter is crucial.
+        *   **For "Incorrect use of ParentData widget"**: The fix is to place the `ParentDataWidget` inside its expected parent widget.
+
+    4.  **Review and Refine:**
+        *   Compare your code to working examples if available.
+        *   Use automatic reformatting support in your Flutter editor.
+        *   Leverage Flutter's hot reload feature to accelerate development and see changes quickly.
+  resources:
+    - https://raw.githubusercontent.com/dart-lang/ai/refs/heads/main/pkgs/dart_mcp_server/README.md
+    - https://docs.flutter.dev/get-started/fundamentals/layout
+    - https://docs.flutter.dev/release/breaking-changes/layout-builder-optimization
+    - https://docs.flutter.dev/testing/common-errors
+    - https://docs.flutter.dev/testing/errors
+    - https://docs.flutter.dev/tools/devtools/inspector
+    - https://docs.flutter.dev/tools/devtools/legacy-inspector
+    - https://docs.flutter.dev/tools/flutter-fix
+    - https://docs.flutter.dev/ui/layout
+    - https://docs.flutter.dev/ui/layout/constraints
+    - https://docs.flutter.dev/ui/layout/tutorial
