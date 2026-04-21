@@ -97,3 +97,30 @@
     - https://docs.flutter.dev/ui/layout
     - https://docs.flutter.dev/ui/layout/constraints
     - https://docs.flutter.dev/ui/layout/tutorial
+- name: flutter-add-widget-preview
+  description: Adds interactive widget previews to the project using the
+    previews.dart system. Use when creating new UI components or updating
+    existing screens to ensure consistent design and interactive testing.
+  instructions: |
+    1. Defining Widget Previews:
+    *   To preview a widget, use the `@Preview` annotation defined in `package:flutter/widget_previews.dart`.
+    *   This annotation can be applied to top-level functions that return a `Widget` or `WidgetBuilder`, static methods within a class that return a `Widget` or `WidgetBuilder`, or public `Widget` constructors and factories with no required arguments.
+    *   A basic example involves importing `package:flutter/widget_previews.dart` and `package:flutter/material.dart`, then defining a function annotated with `@Preview` that returns a `Widget`, such as a `Text` widget. For instance:
+        ```dart
+        import 'package:flutter/widget_previews.dart';
+        import 'package:flutter/material.dart';
+
+        @Preview(name: 'My Sample Text')
+        Widget mySampleText() {
+        return const Text('Hello, World!');
+        }
+        ```
+    
+    *   Multiple preview configurations can be created by applying multiple `@Preview` annotations to a single function or constructor.
+    *   For common configurations, extend `MultiPreview` to create a custom annotation. `MultiPreview` also provides a `transform()` method to perform transformations on each preview at runtime.
+
+    2. Interacting with Previews:
+    *   As of Flutter 3.38, Android Studio, IntelliJ, and Visual Studio Code automatically start the Flutter Widget Previewer on launch.
+    *   Alternatively, the previewer can be started from the command line by navigating to the Flutter project's root directory and running `flutter widget-preview start`. This command launches a local server and opens a Widget Preview environment in Chrome that updates automatically with project changes.
+  resources:
+    - https://docs.flutter.dev/tools/widget-previewer
