@@ -221,3 +221,62 @@
     - https://docs.flutter.dev/ui/layout/constraints
     - https://docs.flutter.dev/ui/layout/tutorial
     - https://docs.flutter.dev/ui/widgets/layout
+- name: flutter-setup-declarative-routing
+  description: Configure `MaterialApp.router` using a package like `go_router`
+    for advanced URL-based navigation. Use when developing web applications or
+    mobile apps that require specific deep linking and browser history support.
+  instructions: |
+    1.  **Create a new Flutter application**:
+        *   Use the command `flutter create <app-name>`. For example, `flutter create deeplink_cookbook`.
+
+    2.  **Add the `go_router` package as a dependency**:
+        *   Run `flutter pub add go_router`. The Flutter team maintains the `go_router` package, which offers a simple API for complex routing scenarios.
+
+    3.  **Configure `MaterialApp.router` with a `GoRouter` object**:
+        *   In your `main.dart` file, import `package:go_router/go_router.dart'` and `package:flutter/material.dart'`.
+        *   Create a `GoRouter` object that defines your application's routes. This object will handle routing, including paths like '/' and '/details'.
+        *   Set up your `main` function to run `MaterialApp.router` and provide it with the `routerConfig` property, which should be your `GoRouter` object.
+        *   For example, you can define routes within the `GoRouter` object using `GoRoute` for different paths and their corresponding builders.
+        *   Routing packages like `go_router` are declarative, meaning they will consistently display the same screen(s) when a deep link is received.
+
+    4.  **Configure deep linking for specific platforms (if needed)**:
+        *   **For iOS:**
+            *   If using a Flutter version earlier than 3.27, manually opt-in to deep linking by adding `FlutterDeepLinkingEnabled` with a value of `YES` to `Info.plist`.
+            *   If using third-party plugins for deep links (e.g., `app_links`), you should opt out of Flutter's default deep link handler by setting `FlutterDeepLinkingEnabled` to `NO` in `Info.plist`.
+            *   Add associated domains by launching Xcode, selecting the top-level Runner, clicking the Runner target, and then "Signing & Capabilities". Add a new capability for "Associated Domains" and enter `applinks:<web domain>`.
+            *   Open `ios/Runner/Runner.entitlements` and add the associated domain inside the `<dict>` tag.
+            *   Host an `apple-app-site-association` file in your web domain, which tells the mobile browser to open your iOS app instead of the browser. This file requires your app's `appID`, formatted as `<team id>.<bundle id>`.
+        *   **For Android:**
+            *   Web apps read the deep link path from the URL fragment by default, using the pattern `/#/path/to/app/screen`, but this can be changed by configuring the URL strategy.
+            *   To configure your Android application to handle deep links, refer to the deep linking documentation.
+  resources:
+    - https://pub.dev/documentation/go_router/latest/topics/Get%20started-topic.html
+    - https://pub.dev/documentation/go_router/latest/topics/Upgrading-topic.html
+    - https://pub.dev/documentation/go_router/latest/topics/Configuration-topic.html
+    - https://pub.dev/documentation/go_router/latest/topics/Navigation-topic.html
+    - https://pub.dev/documentation/go_router/latest/topics/Redirection-topic.html
+    - https://pub.dev/documentation/go_router/latest/topics/Web-topic.html
+    - https://pub.dev/documentation/go_router/latest/topics/Deep%20linking-topic.html
+    - https://pub.dev/documentation/go_router/latest/topics/Transition%20animations-topic.html
+    - https://pub.dev/documentation/go_router/latest/topics/Type-safe%20routes-topic.html
+    - https://pub.dev/documentation/go_router/latest/topics/Named%20routes-topic.html
+    - https://pub.dev/documentation/go_router/latest/topics/Error%20handling-topic.html
+    - https://pub.dev/documentation/go_router/latest/topics/State%20restoration-topic.html
+    - https://docs.flutter.dev/cookbook/animation/page-route-animation
+    - https://docs.flutter.dev/cookbook/effects/nested-nav
+    - https://docs.flutter.dev/cookbook/navigation/named-routes
+    - https://docs.flutter.dev/cookbook/navigation/navigate-with-arguments
+    - https://docs.flutter.dev/cookbook/navigation/navigation-basics
+    - https://docs.flutter.dev/cookbook/navigation/set-up-app-links
+    - https://docs.flutter.dev/cookbook/navigation/set-up-universal-links
+    - https://docs.flutter.dev/packages-and-plugins/using-packages
+    - https://docs.flutter.dev/platform-integration/web
+    - https://docs.flutter.dev/platform-integration/web/building
+    - https://docs.flutter.dev/platform-integration/web/embedding-flutter-web
+    - https://docs.flutter.dev/platform-integration/web/initialization
+    - https://docs.flutter.dev/release/breaking-changes/deep-links-flag-change
+    - https://docs.flutter.dev/release/breaking-changes/route-navigator-refactoring
+    - https://docs.flutter.dev/tools/devtools/deep-links
+    - https://docs.flutter.dev/ui/navigation
+    - https://docs.flutter.dev/ui/navigation/deep-linking
+    - https://docs.flutter.dev/ui/navigation/url-strategies
