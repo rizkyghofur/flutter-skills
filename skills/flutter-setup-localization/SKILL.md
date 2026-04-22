@@ -57,7 +57,7 @@ Create a new file named `l10n.yaml` in the root directory of the Flutter project
 arb-dir: lib/l10n
 template-arb-file: app_en.arb
 output-localization-file: app_localizations.dart
-synthetic-package: false
+synthetic-package: true
 ```
 
 ### 4. Configure the App Entry Point
