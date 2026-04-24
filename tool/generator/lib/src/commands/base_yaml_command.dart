@@ -69,7 +69,7 @@ abstract class BaseYamlCommand extends Command<void> {
     final directoryArg = argResults?['directory'] as String?;
     final outDir = directoryArg != null
         ? Directory(directoryArg)
-        : (outputDir ?? Directory('../skills'));
+        : (outputDir ?? Directory('skills'));
 
     await runWithSkills(targetSkills, outDir, configDir: file.parent);
   }

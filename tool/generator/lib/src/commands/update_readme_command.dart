@@ -48,7 +48,7 @@ class UpdateReadmeCommand extends BaseYamlCommand {
       } else if (parentReadme.existsSync()) {
         readmePath = parentReadme.path;
       } else {
-        readmePath = '../README.md';
+        readmePath = 'README.md';
       }
     }
 
@@ -75,10 +75,18 @@ class UpdateReadmeCommand extends BaseYamlCommand {
     for (final skill in sortedSkills) {
       // Calculate relative link from README to the SKILL.md file
       final skillFile = File(p.join(outputDir.path, skill.name, 'SKILL.md'));
-      final relativeLink = p.relative(
+      var relativeLink = p.relative(
         skillFile.path,
         from: readmeFile.parent.path,
       );
+
+      // Ensure the link contains the skills/ directory in the URL.
+      if (!relativeLink.contains('skills/')) {
+        relativeLink = p.join('skills', relativeLink);
+      }
+
+      // Ensure we use forward slashes for the markdown link.
+      relativeLink = relativeLink.replaceAll('\\', '/');
 
       buffer.writeln(
         '| [${skill.name}]($relativeLink) | ${skill.description} |',
